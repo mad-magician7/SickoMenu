@@ -198,7 +198,7 @@ namespace Menu {
 			if ((IsInGame() || IsInLobby()) && ImGui::Selectable("Players", openPlayers)) {
 				CloseAllOtherTabs(Tabs::Players);
 			}
-			if ((IsInGame() && GetPlayerData(*Game::pLocalPlayer)->fields.Tasks != NULL) && ImGui::Selectable("Tasks", openTasks)) {
+			if (((IsInGame() && GetPlayerData(*Game::pLocalPlayer)->fields.Tasks != NULL) || (IsInLobby() && IsHost())) && ImGui::Selectable("Tasks", openTasks)) {
 				CloseAllOtherTabs(Tabs::Tasks);
 			}
 			if (IsInGame() && ShipStatus__TypeInfo->static_fields->Instance != NULL && ImGui::Selectable("Sabotage", openSabotage)) {
@@ -280,7 +280,7 @@ namespace Menu {
 				}
 			}
 			if (openTasks) {
-				if (IsInGame() && GetPlayerData(*Game::pLocalPlayer)->fields.Tasks != NULL) TasksTab::Render();
+				if ((IsInGame() && GetPlayerData(*Game::pLocalPlayer)->fields.Tasks != NULL) || (IsInLobby() && IsHost())) TasksTab::Render();
 				else {
 					CloseAllOtherTabs(Tabs::Game);
 					GameTab::Render();
