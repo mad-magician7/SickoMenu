@@ -94,12 +94,16 @@ namespace TasksTab {
 
 			ImGui::TextDisabled("Map: %s", mapName);
 			ImGui::Dummy(ImVec2(3, 3) * State.dpiScale);
+			ImVec4 themeCol = State.RgbMenuTheme ? State.RgbColor : (State.GradientMenuTheme ? State.MenuGradientColor : State.MenuThemeColor);
+			ImVec4 themeColDark = ImVec4(themeCol.x * 0.7f, themeCol.y * 0.7f, themeCol.z * 0.7f, themeCol.w);
+			ImVec4 themeColDarker = ImVec4(themeCol.x * 0.5f, themeCol.y * 0.5f, themeCol.z * 0.5f, themeCol.w);
+
 			ImGui::Columns(2, "disabledTasksCols", false);
 			for (auto& [name, id] : *currentTasks) {
 				bool disabled = State.DisabledTaskTypes.count(id) > 0;
-				ImGui::PushStyleColor(ImGuiCol_Button, disabled ? ImVec4(0.8f, 0.f, 0.f, 1.f) : ImVec4(0.f, 0.f, 0.f, 0.f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, disabled ? ImVec4(0.6f, 0.f, 0.f, 1.f) : ImVec4(0.8f, 0.f, 0.f, 1.f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.f, 0.f, 0.f, 1.f));
+				ImGui::PushStyleColor(ImGuiCol_Button, disabled ? themeCol : ImVec4(0.f, 0.f, 0.f, 0.f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, disabled ? themeColDarker : themeColDark);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, themeCol);
 				if (AnimatedButton(name)) {
 					if (disabled) State.DisabledTaskTypes.erase(id);
 					else State.DisabledTaskTypes.insert(id);
