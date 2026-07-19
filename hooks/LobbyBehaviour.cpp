@@ -13,11 +13,27 @@ static std::string getHexCodeFromImVec4(ImVec4 vec) {
         int(vec.x * 255), int(vec.y * 255), int(vec.z * 255), int(vec.w * 255));
 }
 
+void ApplyCosmeticPreset(const Settings::CosmeticPreset& p) {
+    std::queue<RPCInterface*>* queue = IsInGame() ? &State.rpcQueue : (IsInLobby() ? &State.lobbyRpcQueue : nullptr);
+    if (queue == nullptr) return;
+    queue->push(new RpcSetColor((uint8_t)p.ColorId));
+    if (!p.HatId.empty()) queue->push(new RpcSetHat(convert_to_string(p.HatId)));
+    if (!p.SkinId.empty()) queue->push(new RpcSetSkin(convert_to_string(p.SkinId)));
+    if (!p.VisorId.empty()) queue->push(new RpcSetVisor(convert_to_string(p.VisorId)));
+    if (!p.PetId.empty()) queue->push(new RpcSetPet(convert_to_string(p.PetId)));
+    if (!p.NamePlateId.empty()) queue->push(new RpcSetNamePlate(convert_to_string(p.NamePlateId)));
+}
+
+static bool s_pendingCosmeticApply = false;
+
 void dLobbyBehaviour_Start(LobbyBehaviour* __this, MethodInfo* method)
 {
     if (State.ShowHookLogs) Log.Debug("Hook dLobbyBehaviour_Start executed", false);
     State.LobbyTimer = 600;
     LobbyBehaviour_Start(__this, method);
+    if (!State.PanicMode && State.AutoApplyCosmeticPreset && !State.CosmeticPresets.empty()) {
+        s_pendingCosmeticApply = true;
+    }
     if (IsHost()) {
         State.JoinedAsHost = true;
         if (!State.PanicMode && State.AutoApplyHostPreset && !State.HostPresets.empty()) {
@@ -32,6 +48,13 @@ void dLobbyBehaviour_Update(LobbyBehaviour* __this, MethodInfo* method)
     static bool hasStarted = true;
     if (State.ShowHookLogs) Log.Debug("Hook dLobbyBehaviour_Update executed", false);
     LobbyBehaviour_Update(__this, method);
+    if (s_pendingCosmeticApply && IsInLobby()) {
+        s_pendingCosmeticApply = false;
+        if (!State.CosmeticPresets.empty()) {
+            int idx = std::clamp(State.SelectedCosmeticPreset, 0, (int)State.CosmeticPresets.size() - 1);
+            ApplyCosmeticPreset(State.CosmeticPresets[idx]);
+        }
+    }
     if (State.DisableLobbyMusic) {
         hasStarted = false;
         SoundManager_StopSound(SoundManager__TypeInfo->static_fields->instance, (AudioClip*)__this->fields.MapTheme, NULL);

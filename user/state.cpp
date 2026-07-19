@@ -204,6 +204,20 @@ void Settings::Load() {
                 this->HostPresets.push_back(preset);
             }
         }
+        if (j.contains("CosmeticPresets") && j["CosmeticPresets"].is_array()) {
+            this->CosmeticPresets.clear();
+            for (auto& p : j["CosmeticPresets"]) {
+                CosmeticPreset cp;
+                if (p.contains("Name")) cp.Name = p["Name"].get<std::string>();
+                if (p.contains("HatId")) cp.HatId = p["HatId"].get<std::string>();
+                if (p.contains("SkinId")) cp.SkinId = p["SkinId"].get<std::string>();
+                if (p.contains("VisorId")) cp.VisorId = p["VisorId"].get<std::string>();
+                if (p.contains("PetId")) cp.PetId = p["PetId"].get<std::string>();
+                if (p.contains("NamePlateId")) cp.NamePlateId = p["NamePlateId"].get<std::string>();
+                if (p.contains("ColorId")) cp.ColorId = p["ColorId"].get<int32_t>();
+                this->CosmeticPresets.push_back(cp);
+            }
+        }
 
         JSON_TRYGET("NoGameEnd", this->NoGameEnd);
         JSON_TRYGET("DisableMeetings", this->DisableMeetings);
@@ -809,6 +823,17 @@ void Settings::Save() {
                                 }
                                 return rarr;
                             }() }
+                        });
+                    }
+                    return arr;
+                    }() },
+                { "CosmeticPresets", [&]() {
+                    nlohmann::json arr = nlohmann::json::array();
+                    for (auto& p : this->CosmeticPresets) {
+                        arr.push_back({
+                            { "Name", p.Name }, { "HatId", p.HatId }, { "SkinId", p.SkinId },
+                            { "VisorId", p.VisorId }, { "PetId", p.PetId },
+                            { "NamePlateId", p.NamePlateId }, { "ColorId", p.ColorId }
                         });
                     }
                     return arr;

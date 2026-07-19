@@ -198,6 +198,19 @@ public:
     std::vector<HostPreset> HostPresets;
     int SelectedHostPreset = 0;
 
+    struct CosmeticPreset {
+        std::string Name = "Preset";
+        std::string HatId = "";
+        std::string SkinId = "";
+        std::string VisorId = "";
+        std::string PetId = "";
+        std::string NamePlateId = "";
+        int32_t ColorId = 0;
+    };
+    std::vector<CosmeticPreset> CosmeticPresets;
+    int SelectedCosmeticPreset = 0;
+    bool AutoApplyCosmeticPreset = false;
+
     bool ShowKillCD = false;
 
     bool ChatPaste = false;
