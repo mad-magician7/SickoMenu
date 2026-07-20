@@ -6,55 +6,54 @@
 #include "gui-helpers.hpp"
 
 namespace TasksTab {
-	using TaskEntry = std::pair<const char*, int>;
-	using TaskList = std::vector<TaskEntry>;
+	using TaskList = std::vector<TaskTypes__Enum>;
 
 	static const TaskList skeldTasks = {
-		{"Submit Scan", 0}, {"Prime Shields", 1}, {"Fuel Engines", 2},
-		{"Chart Course", 3}, {"Start Reactor", 4}, {"Swipe Card", 5},
-		{"Clear Asteroids", 6}, {"Upload Data", 7}, {"Empty Chute", 9},
-		{"Empty Garbage", 10}, {"Align Engine Output", 11}, {"Fix Wiring", 12},
-		{"Calibrate Distributor", 13}, {"Divert Power", 14}, {"Unlock Manifolds", 15},
-		{"Clean O2 Filter", 18}, {"Vent Cleaning", 60}, {"Stabilize Steering", 21},
+		TaskTypes__Enum::SubmitScan, TaskTypes__Enum::PrimeShields, TaskTypes__Enum::FuelEngines,
+		TaskTypes__Enum::ChartCourse, TaskTypes__Enum::StartReactor, TaskTypes__Enum::SwipeCard,
+		TaskTypes__Enum::ClearAsteroids, TaskTypes__Enum::UploadData, TaskTypes__Enum::EmptyChute,
+		TaskTypes__Enum::EmptyGarbage, TaskTypes__Enum::AlignEngineOutput, TaskTypes__Enum::FixWiring,
+		TaskTypes__Enum::CalibrateDistributor, TaskTypes__Enum::DivertPower, TaskTypes__Enum::UnlockManifolds,
+		TaskTypes__Enum::CleanO2Filter, TaskTypes__Enum::VentCleaning, TaskTypes__Enum::StabilizeSteering,
 	};
 	static const TaskList miraHqTasks = {
-		{"Submit Scan", 0}, {"Prime Shields", 1}, {"Upload Data", 7},
-		{"Start Reactor", 4}, {"Clear Asteroids", 6}, {"Empty Garbage", 10},
-		{"Fix Wiring", 12}, {"Divert Power", 14}, {"Unlock Manifolds", 15},
-		{"Vent Cleaning", 60}, {"Assemble Artifact", 22}, {"Sort Samples", 23},
-		{"Measure Weather", 24}, {"Enter ID Code", 25}, {"Buy Beverage", 26},
-		{"Process Data", 27}, {"Run Diagnostics", 28}, {"Water Plants", 29},
-		{"Monitor Oxygen", 30},
+		TaskTypes__Enum::SubmitScan, TaskTypes__Enum::PrimeShields, TaskTypes__Enum::UploadData,
+		TaskTypes__Enum::StartReactor, TaskTypes__Enum::ClearAsteroids, TaskTypes__Enum::EmptyGarbage,
+		TaskTypes__Enum::FixWiring, TaskTypes__Enum::DivertPower, TaskTypes__Enum::UnlockManifolds,
+		TaskTypes__Enum::VentCleaning, TaskTypes__Enum::AssembleArtifact, TaskTypes__Enum::SortSamples,
+		TaskTypes__Enum::MeasureWeather, TaskTypes__Enum::EnterIdCode, TaskTypes__Enum::BuyBeverage,
+		TaskTypes__Enum::ProcessData, TaskTypes__Enum::RunDiagnostics, TaskTypes__Enum::WaterPlants,
+		TaskTypes__Enum::MonitorOxygen,
 	};
 	static const TaskList polusTasks = {
-		{"Submit Scan", 0}, {"Fuel Engines", 2}, {"Chart Course", 3},
-		{"Start Reactor", 4}, {"Swipe Card", 5}, {"Clear Asteroids", 6},
-		{"Upload Data", 7}, {"Inspect Sample", 8}, {"Empty Garbage", 10},
-		{"Align Engine Output", 11}, {"Fix Wiring", 12}, {"Unlock Manifolds", 15},
-		{"Store Artifacts", 31}, {"Fill Canisters", 32}, {"Fix Weather Node", 33},
-		{"Insert Keys", 34}, {"Scan Boarding Pass", 36}, {"Open Waterways", 37},
-		{"Replace Water Jug", 38}, {"Repair Drill", 39}, {"Align Telescope", 40},
-		{"Record Temperature", 41},
+		TaskTypes__Enum::SubmitScan, TaskTypes__Enum::FuelEngines, TaskTypes__Enum::ChartCourse,
+		TaskTypes__Enum::StartReactor, TaskTypes__Enum::SwipeCard, TaskTypes__Enum::ClearAsteroids,
+		TaskTypes__Enum::UploadData, TaskTypes__Enum::InspectSample, TaskTypes__Enum::EmptyGarbage,
+		TaskTypes__Enum::AlignEngineOutput, TaskTypes__Enum::FixWiring, TaskTypes__Enum::UnlockManifolds,
+		TaskTypes__Enum::StoreArtifacts, TaskTypes__Enum::FillCanisters, TaskTypes__Enum::FixWeatherNode,
+		TaskTypes__Enum::InsertKeys, TaskTypes__Enum::ScanBoardingPass, TaskTypes__Enum::OpenWaterways,
+		TaskTypes__Enum::ReplaceWaterJug, TaskTypes__Enum::RepairDrill, TaskTypes__Enum::AlignTelescope,
+		TaskTypes__Enum::RecordTemperature,
 	};
 	static const TaskList airshipTasks = {
-		{"Fuel Engines", 2}, {"Upload Data", 7}, {"Empty Chute", 9},
-		{"Empty Garbage", 10}, {"Fix Wiring", 12}, {"Calibrate Distributor", 13},
-		{"Divert Power", 14}, {"Stabilize Steering", 21}, {"Polish Ruby", 43},
-		{"Reset Breakers", 44}, {"Decontaminate", 45}, {"Make Burger", 46},
-		{"Unlock Safe", 47}, {"Sort Records", 48}, {"Put Away Pistols", 49},
-		{"Fix Shower", 50}, {"Clean Toilet", 51}, {"Dress Mannequin", 52},
-		{"Pick Up Towels", 53}, {"Rewind Tapes", 54}, {"Start Fans", 55},
-		{"Develop Photos", 56}, {"Get Biggol Sword", 57}, {"Put Away Rifles", 58},
-		{"Stop Charles", 59}, {"Vent Cleaning", 60},
+		TaskTypes__Enum::FuelEngines, TaskTypes__Enum::UploadData, TaskTypes__Enum::EmptyChute,
+		TaskTypes__Enum::EmptyGarbage, TaskTypes__Enum::FixWiring, TaskTypes__Enum::CalibrateDistributor,
+		TaskTypes__Enum::DivertPower, TaskTypes__Enum::StabilizeSteering, TaskTypes__Enum::PolishRuby,
+		TaskTypes__Enum::ResetBreakers, TaskTypes__Enum::Decontaminate, TaskTypes__Enum::MakeBurger,
+		TaskTypes__Enum::UnlockSafe, TaskTypes__Enum::SortRecords, TaskTypes__Enum::PutAwayPistols,
+		TaskTypes__Enum::FixShower, TaskTypes__Enum::CleanToilet, TaskTypes__Enum::DressMannequin,
+		TaskTypes__Enum::PickUpTowels, TaskTypes__Enum::RewindTapes, TaskTypes__Enum::StartFans,
+		TaskTypes__Enum::DevelopPhotos, TaskTypes__Enum::GetBiggolSword, TaskTypes__Enum::PutAwayRifles,
+		TaskTypes__Enum::StopCharles, TaskTypes__Enum::VentCleaning,
 	};
 	static const TaskList fungleTasks = {
-		{"Upload Data", 7}, {"Fix Wiring", 12}, {"Vent Cleaning", 60},
-		{"Record Temperature", 41}, {"Build Sandcastle", 62}, {"Catch Fish", 63},
-		{"Collect Shells", 64}, {"Lift Weights", 65}, {"Roast Marshmallow", 66},
-		{"Test Frisbee", 67}, {"Collect Samples", 68}, {"Collect Vegetables", 69},
-		{"Hoist Supplies", 70}, {"Mine Ores", 71}, {"Polish Gem", 72},
-		{"Replace Parts", 73}, {"Crank Generator", 75}, {"Tune Radio", 77},
-		{"Extract Fuel", 79}, {"Monitor Mushroom", 80}, {"Play Videogame", 81},
+		TaskTypes__Enum::UploadData, TaskTypes__Enum::FixWiring, TaskTypes__Enum::VentCleaning,
+		TaskTypes__Enum::RecordTemperature, TaskTypes__Enum::BuildSandcastle, TaskTypes__Enum::CatchFish,
+		TaskTypes__Enum::CollectShells, TaskTypes__Enum::LiftWeights, TaskTypes__Enum::RoastMarshmallow,
+		TaskTypes__Enum::TestFrisbee, TaskTypes__Enum::CollectSamples, TaskTypes__Enum::CollectVegetables,
+		TaskTypes__Enum::HoistSupplies, TaskTypes__Enum::MineOres, TaskTypes__Enum::PolishGem,
+		TaskTypes__Enum::ReplaceParts, TaskTypes__Enum::CrankGenerator, TaskTypes__Enum::TuneRadio,
+		TaskTypes__Enum::ExtractFuel, TaskTypes__Enum::MonitorMushroom, TaskTypes__Enum::PlayVideogame,
 	};
 
 	static void RenderTaskEnforcer() {
@@ -99,12 +98,14 @@ namespace TasksTab {
 			ImVec4 themeColDarker = ImVec4(themeCol.x * 0.5f, themeCol.y * 0.5f, themeCol.z * 0.5f, themeCol.w);
 
 			ImGui::Columns(2, "disabledTasksCols", false);
-			for (auto& [name, id] : *currentTasks) {
+			for (auto taskType : *currentTasks) {
+				int id = (int)taskType;
+				const char* name = TranslateTaskTypes(taskType);
 				bool disabled = State.DisabledTaskTypes.count(id) > 0;
 				ImGui::PushStyleColor(ImGuiCol_Button, disabled ? themeCol : ImVec4(0.f, 0.f, 0.f, 0.f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, disabled ? themeColDarker : themeColDark);
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, themeCol);
-				if (AnimatedButton(name)) {
+				if (AnimatedButton((std::string(name) + "##" + std::to_string(id)).c_str())) {
 					if (disabled) State.DisabledTaskTypes.erase(id);
 					else State.DisabledTaskTypes.insert(id);
 				}
