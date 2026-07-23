@@ -423,5 +423,10 @@ bool dLogicOptions_GetAnonymousVotes(LogicOptions* __this, MethodInfo* method) {
 
 void dMeetingHud_CastVote(MeetingHud* __this, uint8_t playerId, uint8_t suspectIdx, MethodInfo* method) {
     if (State.ShowHookLogs) Log.Debug("Hook dLogicOptions_GetAnonymousVotes executed", false);
+    if (!State.PanicMode && IsHost() && !State.VoteImmunePlayers.empty()) {
+        if (std::find(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), suspectIdx) != State.VoteImmunePlayers.end()) {
+            suspectIdx = 253; 
+        }
+    }
     MeetingHud_CastVote(__this, playerId, suspectIdx, method);
 }

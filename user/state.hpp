@@ -308,6 +308,7 @@ public:
     bool KillImpostors = false;
     bool KillInVanish = false;
     bool OnlyProtectCrewmates = false;
+    std::vector<uint8_t> VoteImmunePlayers;
     bool BypassAngelProt = false;
     bool InfiniteKillRange = false;
     bool KillInLobbies = false;

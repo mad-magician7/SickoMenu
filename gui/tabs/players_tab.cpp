@@ -1508,6 +1508,14 @@ namespace PlayersTab {
                         else
                             State.RainbowPlayers.push_back(pid);
                     }
+
+                    bool isVoteImmune = std::find(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid) != State.VoteImmunePlayers.end();
+                    if (AnimatedButton(isVoteImmune ? "Remove Vote Immunity" : "Vote Immune")) {
+                        if (isVoteImmune)
+                            State.VoteImmunePlayers.erase(std::remove(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid), State.VoteImmunePlayers.end());
+                        else
+                            State.VoteImmunePlayers.push_back(pid);
+                    }
                 }
 
                 if (State.selectedPlayers.size() == 1) {
