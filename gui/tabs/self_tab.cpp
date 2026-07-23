@@ -55,6 +55,13 @@ namespace SelfTab {
         openTextEditor = group == Groups::TextEditor;
     }
 
+    void OpenSubGroup(const std::string& name) {
+        if (name == "Visuals") CloseOtherGroups(Groups::Visuals);
+        else if (name == "Utils") CloseOtherGroups(Groups::Utils);
+        else if (name == "Randomizers") CloseOtherGroups(Groups::Randomizers);
+        else if (name == "Text Editor") CloseOtherGroups(Groups::TextEditor);
+    }
+
     std::string GetTextEditorName(std::string str) {
         str = RemoveHtmlTags(str);
 
@@ -1020,8 +1027,7 @@ namespace SelfTab {
                 if (!State.CosmeticPresets.empty()) {
                     std::vector<const char*> names;
                     for (auto& p : State.CosmeticPresets) names.push_back(p.Name.c_str());
-                    ImGui::SetNextItemWidth(200 * State.dpiScale);
-                    ImGui::Combo("##cosmeticpresetselect", &State.SelectedCosmeticPreset, names.data(), (int)names.size());
+                    CustomListBoxInt("##cosmeticpresetselect", &State.SelectedCosmeticPreset, names, 200.0f * State.dpiScale);
                     ImGui::SameLine();
                     if (AnimatedButton("Apply##cosmeticpreset")) {
                         ApplyCosmeticPreset(State.CosmeticPresets[std::clamp(State.SelectedCosmeticPreset, 0, (int)State.CosmeticPresets.size() - 1)]);

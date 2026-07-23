@@ -147,6 +147,14 @@ namespace GameTab {
         openOptions = group == Groups::Options;
     }
 
+    void OpenSubGroup(const std::string& name) {
+        if (name == "General") CloseOtherGroups(Groups::General);
+        else if (name == "Chat") CloseOtherGroups(Groups::Chat);
+        else if (name == "Anticheat") CloseOtherGroups(Groups::Anticheat);
+        else if (name == "Utils") CloseOtherGroups(Groups::Utils);
+        else if (name == "History") CloseOtherGroups(Groups::History);
+        else if (name == "Options") CloseOtherGroups(Groups::Options);
+    }
     void Render() {
         ImGui::SameLine(100 * State.dpiScale);
         ImGui::BeginChild("###Game", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
@@ -251,6 +259,13 @@ namespace GameTab {
             ImGui::SameLine();
             if (ToggleButton("Snipe Color", &State.SnipeColor)) {
                 State.Save();
+            }
+
+            if (IsHost() && (IsInGame() || IsInLobby())) {
+                if (ToggleButton("Rainbow Everyone", &State.RainbowAll))
+                    State.Save();
+                if (SliderIntV2("Rainbow Speed", &State.RainbowSpeedMs, 100, 1000, "%dms", ImGuiSliderFlags_NoInput))
+                    State.Save();
             }
 
             if (ToggleButton("Console", &State.ShowConsole)) {

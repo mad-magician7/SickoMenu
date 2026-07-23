@@ -334,6 +334,7 @@ void Settings::Load() {
         JSON_TRYGET("AutoKickSlackersIgnoreWhitelist", this->AutoKickSlackersIgnoreWhitelist);
         JSON_TRYGET("AutoKickSlackersThreshold", this->AutoKickSlackersThreshold);
         JSON_TRYGET("AutoKickSlackersGrace", this->AutoKickSlackersGrace);
+        JSON_TRYGET("RainbowAll", this->RainbowAll);
         JSON_TRYGET("DisableLobbyMusic", this->DisableLobbyMusic);
         JSON_TRYGET("ReportOnMurder", this->ReportOnMurder);
         JSON_TRYGET("PreventSelfReport", this->PreventSelfReport);
@@ -928,6 +929,7 @@ void Settings::Save() {
                 { "AutoKickSlackersIgnoreWhitelist", this->AutoKickSlackersIgnoreWhitelist },
                 { "AutoKickSlackersThreshold", this->AutoKickSlackersThreshold },
                 { "AutoKickSlackersGrace", this->AutoKickSlackersGrace },
+                { "RainbowAll", this->RainbowAll },
                 { "OldStylePingText", this->OldStylePingText },
                 { "NoSeekerAnim", this->NoSeekerAnim },
                 { "BetterChatNotifications", this->BetterChatNotifications },

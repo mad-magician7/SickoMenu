@@ -628,8 +628,12 @@ public:
     bool AutoStartGame = false;
     bool AutoKickSlackers = false;
     bool AutoKickSlackersIgnoreWhitelist = true;
-    int AutoKickSlackersThreshold = 50; 
-    int AutoKickSlackersGrace = 60; 
+    int AutoKickSlackersThreshold = 50;
+    int AutoKickSlackersGrace = 60;
+
+    bool RainbowAll = false;
+    std::vector<uint8_t> RainbowPlayers;
+    int RainbowSpeedMs = 500;
     int AutoStartTimer = 60;
     bool AutoStartGamePlayers = false;
     int AutoStartPlayerCount = 15;

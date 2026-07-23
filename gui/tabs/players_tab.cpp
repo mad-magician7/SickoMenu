@@ -1481,6 +1481,34 @@ namespace PlayersTab {
                     }
                 }
                 ImGui::NewLine();
+                CustomListBoxInt(" ", &forcedColor, COLORS, 85.0f * State.dpiScale);
+                ImGui::SameLine();
+                if (AnimatedButton("Force Color"))
+                {
+                    if (IsInGame()) {
+                        if (IsHost())
+                            State.rpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
+                        else
+                            State.rpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
+                    }
+                    else if (IsInLobby()) {
+                        if (IsHost())
+                            State.lobbyRpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
+                        else
+                            State.lobbyRpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
+                    }
+                }
+
+                if (IsHost() && (IsInGame() || IsInLobby()) && !selectedPlayer.is_LocalPlayer() && selectedPlayers.size() == 1) {
+                    auto pid = selectedPlayer.get_PlayerData()->fields.PlayerId;
+                    bool isRainbow = std::find(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pid) != State.RainbowPlayers.end();
+                    if (AnimatedButton(isRainbow ? "Stop Rainbow" : "Rainbow Player")) {
+                        if (isRainbow)
+                            State.RainbowPlayers.erase(std::remove(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pid), State.RainbowPlayers.end());
+                        else
+                            State.RainbowPlayers.push_back(pid);
+                    }
+                }
 
                 if (State.selectedPlayers.size() == 1) {
                     if ((IsInGame() || IsInLobby()) && !selectedPlayer.is_Disconnected() && !selectedPlayer.is_LocalPlayer())
@@ -1626,24 +1654,6 @@ namespace PlayersTab {
                                 State.rpcQueue.push(new RpcForceName(selectedPlayer.get_PlayerControl(), forcedName));
                             else if (IsInLobby())
                                 State.lobbyRpcQueue.push(new RpcForceName(selectedPlayer.get_PlayerControl(), forcedName));
-                        }
-                    }
-
-                    CustomListBoxInt(" ", &forcedColor, COLORS, 85.0f * State.dpiScale);
-                    ImGui::SameLine();
-                    if (AnimatedButton("Force Color"))
-                    {
-                        if (IsInGame()) {
-                            if (IsHost())
-                                State.rpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
-                            else
-                                State.rpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
-                        }
-                        else if (IsInLobby()) {
-                            if (IsHost())
-                                State.lobbyRpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
-                            else
-                                State.lobbyRpcQueue.push(new RpcForceColor(selectedPlayer.get_PlayerControl(), forcedColor));
                         }
                     }
 

@@ -27,6 +27,12 @@ namespace HostTab {
         openTournaments = group == Groups::Tournaments;
     }
 
+    void OpenSubGroup(const std::string& name) {
+        if (name == "Utils") CloseOtherGroups(Groups::Utils);
+        else if (name == "Settings") CloseOtherGroups(Groups::Settings);
+        else if (name == "Tournaments") CloseOtherGroups(Groups::Tournaments);
+    }
+
     /*std::string GetPlayerNameFromFriendCode(std::string friendCode) {
         for (auto p : GetAllPlayerData()) {
             if (p->fields.FriendCode == convert_to_string(friendCode))
@@ -509,8 +515,7 @@ namespace HostTab {
                     if (!State.HostPresets.empty()) {
                         std::vector<const char*> presetNames;
                         for (auto& p : State.HostPresets) presetNames.push_back(p.Name.c_str());
-                        ImGui::SetNextItemWidth(200 * State.dpiScale);
-                        ImGui::Combo("##presetselect", &State.SelectedHostPreset, presetNames.data(), (int)presetNames.size());
+                        CustomListBoxInt("##presetselect", &State.SelectedHostPreset, presetNames, 200.0f * State.dpiScale);
                         ImGui::SameLine();
                         if (AnimatedButton("Apply")) {
                             int idx = std::clamp(State.SelectedHostPreset, 0, (int)State.HostPresets.size() - 1);
