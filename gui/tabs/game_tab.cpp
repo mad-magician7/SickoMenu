@@ -262,8 +262,6 @@ namespace GameTab {
             }
 
             if (IsHost() && (IsInGame() || IsInLobby())) {
-                if (ToggleButton("Rainbow Everyone", &State.RainbowAll))
-                    State.Save();
                 if (SliderIntV2("Rainbow Speed", &State.RainbowSpeedMs, 100, 1000, "%dms", ImGuiSliderFlags_NoInput))
                     State.Save();
             }
