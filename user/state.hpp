@@ -632,8 +632,6 @@ public:
     int AutoKickSlackersThreshold = 50;
     int AutoKickSlackersGrace = 60;
 
-    std::vector<uint8_t> RainbowPlayers;
-    int RainbowSpeedMs = 500;
     int AutoStartTimer = 60;
     bool AutoStartGamePlayers = false;
     int AutoStartPlayerCount = 15;

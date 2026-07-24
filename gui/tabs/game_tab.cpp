@@ -261,11 +261,6 @@ namespace GameTab {
                 State.Save();
             }
 
-            if (IsHost() && (IsInGame() || IsInLobby())) {
-                if (SliderIntV2("Rainbow Speed", &State.RainbowSpeedMs, 100, 1000, "%dms", ImGuiSliderFlags_NoInput))
-                    State.Save();
-            }
-
             if (ToggleButton("Console", &State.ShowConsole)) {
                 State.Save();
             }

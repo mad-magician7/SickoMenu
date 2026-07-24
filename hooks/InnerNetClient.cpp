@@ -740,29 +740,11 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
                     }
                 }
                 static float slackerTimer = 0.f;
-                static float rainbowTimer = 0.f;
                 if (!IsInGame()) slackerTimer = 0.f;
                 if (!IsInGame() && !IsInLobby()) {
-                    rainbowTimer = 0.f;
-                    State.RainbowPlayers.clear();
                     State.VoteImmunePlayers.clear();
                 }
-                float rainbowInterval = std::clamp(State.RainbowSpeedMs, 10, 1000) / 1000.f;
-                // Rainbow specific players
-                if (IsHost() && (IsInGame() || IsInLobby()) && !State.RainbowPlayers.empty()) {
-                    rainbowTimer += Time_get_deltaTime(NULL);
-                    if (rainbowTimer >= rainbowInterval) {
-                        rainbowTimer = 0.f;
-                        for (auto pc : GetAllPlayerControl()) {
-                            auto pd = GetPlayerData(pc);
-                            if (pd == nullptr) continue;
-                            if (std::find(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pd->fields.PlayerId) != State.RainbowPlayers.end()) {
-                                if (IsInGame()) State.rpcQueue.push(new RpcRainbowPlayer(pc));
-                                else State.lobbyRpcQueue.push(new RpcRainbowPlayer(pc));
-                            }
-                        }
-                    }
-                }
+                
                 if (IsHost() && IsInLobby() && State.AutoStartGame && (600 - State.LobbyTimer) >= State.AutoStartTimer && !autoStartedGame) {
                     autoStartedGame = true;
                     InnerNetClient_SendStartGame(__this, NULL);
@@ -1638,7 +1620,6 @@ void dAmongUsClient_OnGameEnd(AmongUsClient* __this, EndGameResult* endGameResul
         if (count == 0) LOG_DEBUG("No one was a winner in the game.");
         else LOG_DEBUG(winnersText.substr(0, (size_t)winnersText.size() - 2));
 
-        State.RainbowPlayers.clear();
         State.VoteImmunePlayers.clear();
 
         onGameEnd();

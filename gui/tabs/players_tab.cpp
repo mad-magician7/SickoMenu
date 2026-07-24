@@ -1512,13 +1512,6 @@ namespace PlayersTab {
 
                 if (IsHost() && (IsInGame() || IsInLobby()) && !selectedPlayer.is_LocalPlayer() && selectedPlayers.size() == 1) {
                     auto pid = selectedPlayer.get_PlayerData()->fields.PlayerId;
-                    bool isRainbow = std::find(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pid) != State.RainbowPlayers.end();
-                    if (AnimatedButton(isRainbow ? "Stop Rainbow" : "Rainbow Player")) {
-                        if (isRainbow)
-                            State.RainbowPlayers.erase(std::remove(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pid), State.RainbowPlayers.end());
-                        else
-                            State.RainbowPlayers.push_back(pid);
-                    }
                 }
 
                 if (State.selectedPlayers.size() == 1) {
