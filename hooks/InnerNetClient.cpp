@@ -746,6 +746,7 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
                     rainbowTimer = 0.f;
                     State.RainbowAll = false;
                     State.RainbowPlayers.clear();
+                    State.VoteImmunePlayers.clear();
                 }
                 float rainbowInterval = std::clamp(State.RainbowSpeedMs, 10, 1000) / 1000.f;
                 // Rainbow all players
@@ -1648,6 +1649,11 @@ void dAmongUsClient_OnGameEnd(AmongUsClient* __this, EndGameResult* endGameResul
         }
         if (count == 0) LOG_DEBUG("No one was a winner in the game.");
         else LOG_DEBUG(winnersText.substr(0, (size_t)winnersText.size() - 2));
+
+        State.RainbowAll = false;
+        State.RainbowPlayers.clear();
+        State.VoteImmunePlayers.clear();
+
         onGameEnd();
     }
     catch (...) {

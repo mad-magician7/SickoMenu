@@ -760,6 +760,17 @@ namespace PlayersTab {
                     }
                 }
 
+                if (IsHost() && IsInGame() && !selectedPlayer.is_LocalPlayer() && selectedPlayers.size() == 1) {
+                    auto pid = selectedPlayer.get_PlayerData()->fields.PlayerId;
+                    bool isVoteImmune = std::find(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid) != State.VoteImmunePlayers.end();
+                    if (AnimatedButton(isVoteImmune ? "Remove Vote Immunity" : "Vote Immune")) {
+                        if (isVoteImmune)
+                            State.VoteImmunePlayers.erase(std::remove(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid), State.VoteImmunePlayers.end());
+                        else
+                            State.VoteImmunePlayers.push_back(pid);
+                    }
+                }
+
                 /*if ((IsInGame() || IsInLobby()) && selectedPlayer.get_PlayerData()->fields.IsDead) {
                     if (AnimatedButton("Revive"))
                     {
@@ -1507,14 +1518,6 @@ namespace PlayersTab {
                             State.RainbowPlayers.erase(std::remove(State.RainbowPlayers.begin(), State.RainbowPlayers.end(), pid), State.RainbowPlayers.end());
                         else
                             State.RainbowPlayers.push_back(pid);
-                    }
-
-                    bool isVoteImmune = std::find(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid) != State.VoteImmunePlayers.end();
-                    if (AnimatedButton(isVoteImmune ? "Remove Vote Immunity" : "Vote Immune")) {
-                        if (isVoteImmune)
-                            State.VoteImmunePlayers.erase(std::remove(State.VoteImmunePlayers.begin(), State.VoteImmunePlayers.end(), pid), State.VoteImmunePlayers.end());
-                        else
-                            State.VoteImmunePlayers.push_back(pid);
                     }
                 }
 
