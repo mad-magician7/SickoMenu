@@ -154,6 +154,8 @@ public:
     std::string VotekickRejoinLobbyCode = "";
     std::string AutoJoinLobbyCode = "";
     bool JoinLobby = false;
+    bool CreateLobby = false;
+    int CreateLobbyFilterTag = 3; // 0=None, 1=Beginner, 2=Intermediate, 3=Expert
     std::string JoinLobbyCode = "";
     std::unordered_map<std::string, std::string> LobbyHostCache;
     int LobbyHistoryLimit = 20;
@@ -730,6 +732,18 @@ public:
 
     bool murderLoop = false;
     bool suicideLoop = false;
+    enum class LevelFarmAutoPhase {
+        Idle, CreatingLobby, WaitingLobbyReady, StartingFarmGame, WaitingFarmGameStart, StartingFarm, Farming,
+        WaitingEndGameScreen, PressingPlayAgain, WaitingLobbyAfterPlayAgain,
+        QuickStarting, WaitingGameStart, QuickEnding,
+        LeavingForNextRound
+    };
+    bool AutoLevelFarmActive = false;
+    LevelFarmAutoPhase AutoLevelFarmPhase = LevelFarmAutoPhase::Idle;
+    int AutoLevelFarmQuickCyclesDone = 0;
+    int AutoLevelFarmQuickCyclesTarget = 70;
+    float AutoLevelFarmPhaseTimer = 0.f;
+    int AutoLevelFarmRoundsCompleted = 0;
     bool farmLoop = false;
     int murderCount = 0;
     int murderDelay = 0;
