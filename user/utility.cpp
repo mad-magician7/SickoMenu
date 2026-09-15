@@ -1953,6 +1953,41 @@ static std::string SMAC_GetReasonCategory(const std::string& reason) {
     return "";
 }
 
+static std::string GetSMACCategoryForReason(const std::string& reason) {
+    static const std::vector<std::pair<std::string, std::string>> categoryMap = {
+        { "SickoMenu User", "SickoMenu Usage" },
+        { "AmongUsMenu User", "Known Cheat Usage" },
+        { "KillNetwork User", "Known Cheat Usage" },
+        { "ChocooMenu User", "Known Cheat Usage" },
+        { "SlopMenuCrew User", "Known Cheat Usage" },
+        { "Abnormal Name", "Abnormal Names" },
+        { "Abnormal Change Color", "Abnormal Set Color" },
+        { "Abnormal Change Cosmetics", "Abnormal Set Cosmetics" },
+        { "Abnormal Chat Note", "Abnormal Chat Note" },
+        { "Abnormal MedBay Scan", "Abnormal Scanner" },
+        { "Abnormal Animation", "Abnormal Animation" },
+        { "Abnormal Set Tasks", "Setting Tasks" },
+        { "Abnormal Murder Player", "Abnormal Murders" },
+        { "Abnormal Shapeshift", "Abnormal Shapeshift" },
+        { "Abnormal Vanish", "Abnormal Vanish" },
+        { "Abnormal Meeting", "Abnormal Meetings/Body Reports" },
+        { "Abnormal Report Body", "Abnormal Meetings/Body Reports" },
+        { "Abnormal Venting", "Abnormal Venting" },
+        { "Abnormal Chat", "Abnormal Chat" }, 
+        { "Abnormal Task Completion", "Abnormal Task Completion" },
+        { "Bad Sabotage", "Abnormal Sabotages" },
+        { "Abnormal Level", "Abnormal Player Levels" },
+        { "Abnormal Friendcode", "Abnormal Friendcode" },
+        { "Bad Word: ", "Blocked Words" },
+        { "Start Word: ", "Blocked Start Words" },
+    };
+    for (auto& [prefix, category] : categoryMap) {
+        if (reason.rfind(prefix, 0) == 0) return category;
+    }
+    if (reason.find("Blacklisted") != std::string::npos) return "Blacklisted Players";
+    return ""; 
+}
+
 void SMAC_OnCheatDetected(PlayerControl* pCtrl, std::string reason) {
     if (!State.Enable_SMAC) return;
     if (reason == "Overloading" && !(IsHost() && State.SMAC_HostPunishment >= 2)) return; // Don't spam logs for overloading
@@ -1983,7 +2018,14 @@ void SMAC_OnCheatDetected(PlayerControl* pCtrl, std::string reason) {
     auto* notifier = (NotificationPopper*)Game::HudManager.GetInstance()->fields.Notifier;
     float spacingBackup = notifier->fields.spacingY;
 
-    int punishment = IsHost() ? State.SMAC_HostPunishment : State.SMAC_Punishment;
+    std::string smacCategory = GetSMACCategoryForReason(reason);
+    int punishment;
+    if (!smacCategory.empty() && IsHost() && State.SMAC_ReasonPunishmentOverrideHost.count(smacCategory))
+        punishment = State.SMAC_ReasonPunishmentOverrideHost[smacCategory];
+    else if (!smacCategory.empty() && !IsHost() && State.SMAC_ReasonPunishmentOverride.count(smacCategory))
+        punishment = State.SMAC_ReasonPunishmentOverride[smacCategory];
+    else
+        punishment = IsHost() ? State.SMAC_HostPunishment : State.SMAC_Punishment;
 
     switch (punishment) {
     case 0:
