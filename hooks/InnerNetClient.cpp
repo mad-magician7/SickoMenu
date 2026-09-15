@@ -15,6 +15,8 @@
 using namespace std::string_view_literals;
 
 static bool autoStartedGame = false;
+static bool autoEndedGame = false;
+static float autoEndGameTimer = 0.f;
 extern bool editingAutoStartPlayerCount;
 
 static std::string strToLower(std::string str) {
@@ -465,6 +467,221 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
                 // joinDelay = 100;
             }
 
+            if (State.CreateLobby) {
+                if (State.CurrentScene != "MainMenu") {
+                    // Step 1: back out to the main menu first, wherever we currently are
+                    if (IsInGame() || IsInLobby()) {
+                        AmongUsClient_ExitGame(*Game::pAmongUsClient, DisconnectReasons__Enum::ExitGame, NULL);
+                    }
+                    // else: mid-transition already (loading screen, another menu, etc.) - just wait, next frame re-checks
+                }
+                else {
+                    static std::string createGameOptionsTypeName = translate_type_name("CreateGameOptions, Assembly-CSharp");
+                    Type* createGameOptionsType = Type_GetType(convert_to_string(createGameOptionsTypeName), NULL);
+                    Object_1__Array* cgoInstances = createGameOptionsType != nullptr
+                        ? (Object_1__Array*)Object_1_FindObjectsOfType(createGameOptionsType, NULL) : nullptr;
+
+                    if (cgoInstances != nullptr && cgoInstances->max_length > 0) {
+                        // Step 3: Create Game screen is up - drive it and finish
+                        CreateGameOptions* menu = (CreateGameOptions*)cgoInstances->vector[0];
+                        CreateGameOptions_SetTag(menu, State.CreateLobbyFilterTag, NULL);
+                        CreateGameOptions_Confirm(menu, NULL);
+                        State.CreateLobby = false;
+                    }
+                    else {
+                        // Step 2: at the main menu, but the screen isn't open yet - open it, next frame(s) will find it
+                        static std::string mainMenuManagerTypeName = translate_type_name("MainMenuManager, Assembly-CSharp");
+                        Type* mainMenuManagerType = Type_GetType(convert_to_string(mainMenuManagerTypeName), NULL);
+                        Object_1__Array* mmInstances = mainMenuManagerType != nullptr
+                            ? (Object_1__Array*)Object_1_FindObjectsOfType(mainMenuManagerType, NULL) : nullptr;
+
+                        if (mmInstances != nullptr && mmInstances->max_length > 0) {
+                            MainMenuManager* mm = (MainMenuManager*)mmInstances->vector[0];
+                            MainMenuManager_OpenCreateGame(mm, NULL);
+                        }
+                    }
+                }
+            }
+            if (State.AutoLevelFarmActive) {
+                State.AutoLevelFarmPhaseTimer += Time_get_deltaTime(NULL);
+                const float PHASE_TIMEOUT = 15.f;
+                bool timedOut = State.AutoLevelFarmPhaseTimer > PHASE_TIMEOUT;
+
+                auto advancePhase = [&](Settings::LevelFarmAutoPhase next) {
+                    LOG_DEBUG(std::format("AutoLevelFarm: phase {} -> {}", (int)State.AutoLevelFarmPhase, (int)next));
+                    State.AutoLevelFarmPhase = next;
+                    State.AutoLevelFarmPhaseTimer = 0.f;
+                    };
+
+                switch (State.AutoLevelFarmPhase) {
+                case Settings::LevelFarmAutoPhase::Idle:
+                    if (IsInGame()) {
+                        advancePhase(Settings::LevelFarmAutoPhase::WaitingBeforeFarm);
+                    }
+                    else if (IsInLobby()) {
+                        advancePhase(Settings::LevelFarmAutoPhase::StartingFarmGame);
+                    }
+                    else {
+                        State.CreateLobby = true;
+                        advancePhase(Settings::LevelFarmAutoPhase::CreatingLobby);
+                    }
+                    break;
+
+                case Settings::LevelFarmAutoPhase::CreatingLobby:
+                    if (!State.CreateLobby) advancePhase(Settings::LevelFarmAutoPhase::WaitingLobbyReady);
+                    else if (timedOut) { State.CreateLobby = false; advancePhase(Settings::LevelFarmAutoPhase::Idle); }
+                    break;
+
+                case Settings::LevelFarmAutoPhase::WaitingLobbyReady:
+                    if (IsInLobby()) advancePhase(Settings::LevelFarmAutoPhase::StartingFarmGame);
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::Idle);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::StartingFarmGame:
+                    if (IsInLobby()) {
+                        AmongUsClient_KickNotJoinedPlayers(*Game::pAmongUsClient, NULL);
+                        InnerNetClient_SendStartGame((InnerNetClient*)(*Game::pAmongUsClient), NULL);
+                        advancePhase(Settings::LevelFarmAutoPhase::WaitingFarmGameStart);
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::Idle);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::WaitingFarmGameStart:
+                    if (IsInGame()) advancePhase(Settings::LevelFarmAutoPhase::WaitingBeforeFarm);
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::StartingFarmGame);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::WaitingBeforeFarm:
+                    if (State.AutoLevelFarmPhaseTimer >= State.AutoLevelFarmStartDelay)
+                        advancePhase(Settings::LevelFarmAutoPhase::StartingFarm);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::StartingFarm:
+                    if (IsInGame() && !State.farmLoop) {
+                        State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::ImpostorGhost));
+                        State.farmCount = 3500;
+                        State.farmLoop = true;
+                        advancePhase(Settings::LevelFarmAutoPhase::Farming);
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::Idle);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::Farming:
+                    State.AutoLevelFarmPhaseTimer = 0.f;
+
+                    if (!State.farmLoop) {
+                        State.AutoLevelFarmQuickCyclesDone = -1;
+                        State.CurrentFarmEndPhase = Settings::FarmEndPhase::SetRealRole;
+                        advancePhase(Settings::LevelFarmAutoPhase::EndingFarmSequence);
+                    }
+                    break;
+
+                case Settings::LevelFarmAutoPhase::EndingFarmSequence:
+                    if (State.CurrentFarmEndPhase == Settings::FarmEndPhase::None)
+                        advancePhase(Settings::LevelFarmAutoPhase::WaitingEndGameScreen);
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::WaitingEndGameScreen); // escape hatch
+                    break;
+
+                case Settings::LevelFarmAutoPhase::WaitingEndGameScreen: {
+                    static std::string endGameManagerTypeName = translate_type_name("EndGameManager, Assembly-CSharp");
+                    Type* endGameManagerType = Type_GetType(convert_to_string(endGameManagerTypeName), NULL);
+                    Object_1__Array* egmInstances = endGameManagerType != nullptr
+                        ? (Object_1__Array*)Object_1_FindObjectsOfType(endGameManagerType, NULL) : nullptr;
+                    if (egmInstances != nullptr && egmInstances->max_length > 0) {
+                        advancePhase(Settings::LevelFarmAutoPhase::PressingPlayAgain);
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::LeavingForNextRound); // give up this round, escape hatch
+                    break;
+                }
+
+                case Settings::LevelFarmAutoPhase::PressingPlayAgain: {
+                    static std::string endGameManagerTypeName2 = translate_type_name("EndGameManager, Assembly-CSharp");
+                    Type* endGameManagerType2 = Type_GetType(convert_to_string(endGameManagerTypeName2), NULL);
+                    Object_1__Array* egmInstances2 = endGameManagerType2 != nullptr
+                        ? (Object_1__Array*)Object_1_FindObjectsOfType(endGameManagerType2, NULL) : nullptr;
+                    if (egmInstances2 != nullptr && egmInstances2->max_length > 0) {
+                        EndGameManager* mgr = (EndGameManager*)egmInstances2->vector[0];
+                        if (mgr != nullptr && mgr->fields.Navigation != nullptr) {
+                            EndGameNavigation_NextGame(mgr->fields.Navigation, NULL);
+                            advancePhase(Settings::LevelFarmAutoPhase::WaitingLobbyAfterPlayAgain);
+                        }
+                        else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::WaitingEndGameScreen); // retry
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::WaitingEndGameScreen); // retry
+                    break;
+                }
+
+                case Settings::LevelFarmAutoPhase::WaitingLobbyAfterPlayAgain:
+                    if (IsInLobby()) {
+                        if (State.AutoLevelFarmQuickCyclesDone < 0) State.AutoLevelFarmQuickCyclesDone = 0;
+                        else State.AutoLevelFarmQuickCyclesDone++;
+                        advancePhase(Settings::LevelFarmAutoPhase::QuickStarting);
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::LeavingForNextRound);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::QuickStarting:
+                    if (State.AutoLevelFarmQuickCyclesDone >= State.AutoLevelFarmQuickCyclesTarget) {
+                        advancePhase(Settings::LevelFarmAutoPhase::LeavingForNextRound);
+                    }
+                    else if (IsInLobby() && State.AutoLevelFarmPhaseTimer >= 0.6f) { // small settle delay before starting again
+                        AmongUsClient_KickNotJoinedPlayers(*Game::pAmongUsClient, NULL);
+                        InnerNetClient_SendStartGame((InnerNetClient*)(*Game::pAmongUsClient), NULL);
+                        advancePhase(Settings::LevelFarmAutoPhase::WaitingGameStart);
+                    }
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::LeavingForNextRound);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::WaitingGameStart:
+                    if (IsInGame()) advancePhase(Settings::LevelFarmAutoPhase::QuickEnding);
+                    else if (timedOut) advancePhase(Settings::LevelFarmAutoPhase::QuickStarting);
+                    break;
+
+                case Settings::LevelFarmAutoPhase::QuickEnding:
+                    if (!IsInGame()) { advancePhase(Settings::LevelFarmAutoPhase::WaitingEndGameScreen); break; }
+                    if (State.AutoLevelFarmPhaseTimer >= 0.6f) { // stay in-game briefly before ending, instead of instant end
+                        State.CurrentFarmEndPhase = Settings::FarmEndPhase::SetRealRole;
+                        advancePhase(Settings::LevelFarmAutoPhase::EndingFarmSequence);
+                    }
+                    break;
+
+                case Settings::LevelFarmAutoPhase::LeavingForNextRound:
+                    if (IsInLobby() || IsInGame()) {
+                        AmongUsClient_ExitGame(*Game::pAmongUsClient, DisconnectReasons__Enum::ExitGame, NULL);
+                    }
+                    State.AutoLevelFarmRoundsCompleted++;
+                    advancePhase(Settings::LevelFarmAutoPhase::Idle);
+                    break;
+                }
+            }
+
+            // Real role, then fake/networked role, then end-game - a full second apart
+            // instead of all queued together. Shared by manual Stop Level Farm and both
+            // auto end paths.
+            if (State.CurrentFarmEndPhase != Settings::FarmEndPhase::None) {
+                State.FarmEndPhaseTimer += Time_get_deltaTime(NULL);
+                switch (State.CurrentFarmEndPhase) {
+                case Settings::FarmEndPhase::SetRealRole:
+                    State.rpcQueue.push(new SetRole(RoleTypes__Enum::Impostor));
+                    State.CurrentFarmEndPhase = Settings::FarmEndPhase::SetFakeRole;
+                    State.FarmEndPhaseTimer = 0.f;
+                    break;
+                case Settings::FarmEndPhase::SetFakeRole:
+                    if (State.FarmEndPhaseTimer >= State.FarmEndPhaseStepDelay) {
+                        State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::Impostor));
+                        State.CurrentFarmEndPhase = Settings::FarmEndPhase::EndGame;
+                        State.FarmEndPhaseTimer = 0.f;
+                    }
+                    break;
+                case Settings::FarmEndPhase::EndGame:
+                    if (State.FarmEndPhaseTimer >= State.FarmEndPhaseStepDelay) {
+                        State.rpcQueue.push(new RpcEndGame(GameOverReason__Enum::ImpostorsByKill));
+                        State.CurrentFarmEndPhase = Settings::FarmEndPhase::None;
+                    }
+                    break;
+                default: break;
+                }
+            }
             static int reportDelay = 0;
             if (reportDelay <= 0 && State.SpamReport && (IsHost() || !State.SafeMode) && IsInGame()) {
                 for (auto p : GetAllPlayerControl()) {
@@ -764,7 +981,16 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
                     InnerNetClient_SendStartGame(__this, NULL);
                 }
 
-
+                if (!IsInGame()) { autoEndGameTimer = 0.f; autoEndedGame = false; }
+                if (IsHost() && IsInGame() && State.AutoEndGame && !autoEndedGame) {
+                    autoEndGameTimer += Time_get_deltaTime(NULL);
+                    if (autoEndGameTimer >= State.AutoEndTimer) {
+                        autoEndedGame = true;
+                        State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::Impostor));
+                        State.rpcQueue.push(new SetRole(RoleTypes__Enum::Impostor));
+                        State.rpcQueue.push(new RpcEndGame(GameOverReason__Enum::ImpostorsByKill));
+                    }
+                }
 
                 if (IsHost() && IsInGame() && State.AutoKickSlackers) {
                     slackerTimer += Time_get_deltaTime(NULL);
@@ -1340,18 +1566,20 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
 
         if (State.farmLoop) {
             if (State.farmDelay <= 0 && *Game::pLocalPlayer != NULL) {
-                if (State.farmCount > 0) {                    
+                if (State.farmCount > 0) {
                     uint8_t gameDataTag = 5, rpcFlag = 2;
 
                     auto writer = MessageWriter_Get(SendOption__Enum::Reliable, NULL);
                     MessageWriter_StartMessage(writer, gameDataTag, NULL);
                     MessageWriter_WriteInt32(writer, (*Game::pAmongUsClient)->fields._.GameId, NULL);
 
-                    for (int i = 0; i < 10; ++i) {
+                    int maxPackedRpcs = 10 + GameOptions().GetInt(Int32OptionNames__Enum::MaxPlayers) * 2;
+
+                    for (int i = 0; i < maxPackedRpcs; ++i) {
                         MessageWriter_StartMessage(writer, rpcFlag, NULL);
                         MessageWriter_WritePacked(writer, (*Game::pLocalPlayer)->fields._.NetId, NULL);
                         MessageWriter_WriteByte(writer, (uint8_t)RpcCalls__Enum::MurderPlayer, NULL);
-                        MessageWriter_WriteInt32(writer, 0, NULL);
+                        MessageExtensions_WriteNetObject(writer, (InnerNetObject*)(*Game::pLocalPlayer), NULL);
                         MessageWriter_WriteInt32(writer, (int32_t)MurderResultFlags__Enum::Succeeded, NULL);
                         MessageWriter_EndMessage(writer, NULL);
                     }
@@ -1366,9 +1594,7 @@ void dInnerNetClient_Update(InnerNetClient* __this, MethodInfo* method)
                 else {
                     State.farmLoop = false;
                     State.farmCount = 0;
-                    PlayerControl_RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::Impostor, true, NULL);
-                    RoleManager_SetRole(Game::RoleManager.GetInstance(), *Game::pLocalPlayer, RoleTypes__Enum::Impostor, NULL);
-                    GameManager_RpcEndGame(GameManager__TypeInfo->static_fields->_Instance_k__BackingField, GameOverReason__Enum::ImpostorsByKill, false, NULL);
+                    State.CurrentFarmEndPhase = Settings::FarmEndPhase::SetRealRole;
                 }
             }
             else State.farmDelay--;

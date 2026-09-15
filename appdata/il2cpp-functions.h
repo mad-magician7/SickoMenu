@@ -422,6 +422,10 @@ DO_APP_FUNC(void, EndGameNavigation_ShowDefaultNavigation, (EndGameNavigation* _
 //DO_APP_FUNC(void*, EndGameNavigation_CoJoinGame, (EndGameNavigation* __this, MethodInfo* method), "Assembly-CSharp, System.Collections.IEnumerator EndGameNavigation::CoJoinGame()");
 DO_APP_FUNC(void*, AmongUsClient_CoJoinOnlineGameFromCode, (AmongUsClient* __this, int32_t gameId, bool fromEnterCode, MethodInfo* method), "Assembly-CSharp, System.Collections.IEnumerator AmongUsClient::CoJoinOnlineGameFromCode(System.Int32, System.Boolean)");
 DO_APP_FUNC(void*, AmongUsClient_CoFindGameInfoFromCodeAndJoin, (AmongUsClient* __this, int32_t gameId, MethodInfo* method), "Assembly-CSharp, System.Collections.IEnumerator AmongUsClient::CoFindGameInfoFromCodeAndJoin(System.Int32)");
+DO_APP_FUNC(void*, AmongUsClient_CoCreateOnlineGame, (AmongUsClient* __this, MethodInfo* method), "Assembly-CSharp, System.Collections.IEnumerator AmongUsClient::CoCreateOnlineGame()");
+DO_APP_FUNC(void, CreateGameOptions_SetTag, (CreateGameOptions* __this, int32_t i, MethodInfo* method), "Assembly-CSharp, System.Void CreateGameOptions::SetTag(System.Int32)");
+DO_APP_FUNC(void, CreateGameOptions_Confirm, (CreateGameOptions* __this, MethodInfo* method), "Assembly-CSharp, System.Void CreateGameOptions::Confirm()");
+DO_APP_FUNC(void, MainMenuManager_OpenCreateGame, (MainMenuManager* __this, MethodInfo* method), "Assembly-CSharp, System.Void MainMenuManager::OpenCreateGame()");
 DO_APP_FUNC(void*, MonoBehaviour_StartCoroutine, (MonoBehaviour* __this, void* routine, MethodInfo* method), "UnityEngine.CoreModule, UnityEngine.Coroutine UnityEngine.MonoBehaviour::StartCoroutine(System.Collections.IEnumerator)");
 DO_APP_FUNC(PlayerBodyTypes__Enum, HideAndSeekManager_GetBodyType, (HideAndSeekManager* __this, PlayerControl* player, MethodInfo* method), "Assembly-CSharp, PlayerBodyTypes HideAndSeekManager::GetBodyType(PlayerControl)");
 DO_APP_FUNC(PlayerBodyTypes__Enum, NormalGameManager_GetBodyType, (NormalGameManager* __this, PlayerControl* player, MethodInfo* method), "Assembly-CSharp, PlayerBodyTypes NormalGameManager::GetBodyType(PlayerControl)");

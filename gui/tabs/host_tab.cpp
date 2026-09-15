@@ -459,7 +459,18 @@ namespace HostTab {
                 if (State.AutoStartGame) {
                     ImGui::Text("Start After");
                     ImGui::SameLine();
-                    ImGui::InputInt("sec", &State.AutoStartTimer);
+                    ImGui::InputFloat("sec##AutoStart", &State.AutoStartTimer, 0.5f, 1.0f, "%.1f");
+                    if (State.AutoStartTimer < 0.5f) State.AutoStartTimer = 0.5f;
+                }
+
+                if (ToggleButton("Auto End Game", &State.AutoEndGame))
+                    State.Save();
+
+                if (State.AutoEndGame) {
+                    ImGui::Text("End After");
+                    ImGui::SameLine();
+                    ImGui::InputFloat("sec##AutoEnd", &State.AutoEndTimer, 0.5f, 1.0f, "%.1f");
+                    if (State.AutoEndTimer < 0.5f) State.AutoEndTimer = 0.5f;
                 }
 
                 /*if (ToggleButton("Auto Start Game (By Player Count)", &State.AutoStartGamePlayers))
@@ -566,12 +577,13 @@ namespace HostTab {
                     State.Save();
                 }
 
-                /*if (GetAllPlayerControl().size() == 1 && IsInGame()) { \
-                    if (!State.farmLoop && AnimatedButton("Level Farm (50000 Kills)")) {
-                        State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::ImpostorGhost));
-                        State.farmCount = 5000; //controls how many times the player is to be murdered
-                        State.farmLoop = true;
-                    }
+                if (GetAllPlayerControl().size() == 1 && IsInGame()) {
+                    \
+                        if (!State.farmLoop && AnimatedButton("Level Farm (50000 Kills)")) {
+                            State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, RoleTypes__Enum::ImpostorGhost));
+                            State.farmCount = 5000; //controls how many times the player is to be murdered
+                            State.farmLoop = true;
+                        }
                     if (State.farmLoop && AnimatedButton("Stop Level Farm (End Game by Impostor Kill Win)")) {
                         State.farmLoop = false;
                         State.farmCount = 0;
@@ -580,7 +592,18 @@ namespace HostTab {
                         State.rpcQueue.push(new RpcEndGame(GameOverReason__Enum::ImpostorsByKill));
                     }
                     if (State.farmLoop) ImGui::Text(std::format("({} Kills)", 50000 - 10 * State.farmCount).c_str());
-                }*/
+
+                    ImGui::Dummy(ImVec2(0, 5) * State.dpiScale);
+                    if (ToggleButton("Auto Level Farm (Repeat Forever)", &State.AutoLevelFarmActive)) {
+                        if (!State.AutoLevelFarmActive)
+                            State.AutoLevelFarmPhase = Settings::LevelFarmAutoPhase::Idle;
+                        State.Save();
+                    }
+                    if (State.AutoLevelFarmActive) {
+                        ImGui::Text(std::format("Rounds completed: {} | Quick cycles: {}/{}",
+                            State.AutoLevelFarmRoundsCompleted, State.AutoLevelFarmQuickCyclesDone, State.AutoLevelFarmQuickCyclesTarget).c_str());
+                    }
+                }
 
                 ImGui::EndChild();
             }

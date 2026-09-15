@@ -6402,7 +6402,8 @@ namespace app {
         VirtualInvokeData GetHashCode;
         VirtualInvokeData ToString;
     };
-
+    struct CreateGameOptions;
+    struct MainMenuManager;
     struct ChatController__StaticFields {
         void* Logger;
     };

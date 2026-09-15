@@ -214,6 +214,7 @@ void KeyBinds::to_json(nlohmann::ordered_json& j, KeyBinds::Config value)
         {"Toggle_Sicko", value.Toggle_Sicko},
         {"Leave_Game", value.Leave_Game},
         {"Cancel_Start", value.Cancel_Start},
+        {"Create_Lobby", value.Create_Lobby},
     };
 }
 
@@ -238,4 +239,5 @@ void KeyBinds::from_json(const nlohmann::ordered_json& j, KeyBinds::Config& valu
     j.at("Complete_Tasks").get_to(value.Complete_Tasks);
     j.at("Toggle_Sicko").get_to(value.Toggle_Sicko);
     j.at("Leave_Game").get_to(value.Leave_Game);
+    value.Create_Lobby = j.value("Create_Lobby", (uint8_t)0); // safe default for configs saved before this keybind existed
 }

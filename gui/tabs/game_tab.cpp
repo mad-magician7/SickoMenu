@@ -976,6 +976,19 @@ namespace GameTab {
         }
 
         if (openUtils) {
+            if (IsHost()) {
+                if (ToggleButton("Auto Level Farm (Repeat Forever)", &State.AutoLevelFarmActive)) {
+                    if (!State.AutoLevelFarmActive)
+                        State.AutoLevelFarmPhase = Settings::LevelFarmAutoPhase::Idle;
+                    State.Save();
+                }
+                if (State.AutoLevelFarmActive) {
+                    ImGui::Text(std::format("Rounds completed: {} | Quick cycles: {}/{}",
+                        State.AutoLevelFarmRoundsCompleted, State.AutoLevelFarmQuickCyclesDone, State.AutoLevelFarmQuickCyclesTarget).c_str());
+                }
+                ImGui::Dummy(ImVec2(0, 5) * State.dpiScale);
+            }
+
             /*if (ToggleButton("Ignore Whitelisted Players [Exploits]", &State.Destruct_IgnoreWhitelist)) {
                 State.Save();
             }*/
