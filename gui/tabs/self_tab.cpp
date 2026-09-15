@@ -649,11 +649,11 @@ namespace SelfTab {
             if (ToggleButton("Show Votekick Notifications", &State.ShowVotekickNotifications)) {
                 State.Save();
             }
-            ImGui::SameLine();
+            
             if (ToggleButton("Disable Shush Animation", &State.DisableShushAnimation)) {
                 State.Save();
             }
-
+            ImGui::SameLine();
             if (ToggleButton("Autokill", &State.AutoKill)) {
                 State.Save();
             }
