@@ -139,23 +139,6 @@ namespace PlayersTab {
                 State.selectedPlayer = {};
             }
 
-            if (!State.PendingRejoinTargetFC.empty() && State.PendingRejoinReady) {
-                for (auto pc : GetAllPlayerControl()) {
-                    if (pc == nullptr) continue;
-                    auto pd = GetPlayerData(pc);
-                    if (pd == nullptr || pd->fields.Disconnected) continue;
-                    std::string fc = convert_from_string(pd->fields.FriendCode);
-                    std::string name = convert_from_string(NetworkedPlayerInfo_get_PlayerName(pd, nullptr));
-                    if (fc == State.PendingRejoinTargetFC || name == State.PendingRejoinTargetFC) {
-                        State.selectedPlayer = PlayerSelection(pc);
-                        State.selectedPlayers = { pd->fields.PlayerId };
-                        State.PendingRejoinTargetFC = "";
-                        State.PendingRejoinReady = false;
-                        break;
-                    }
-                }
-            }
-
             auto selectedPlayer = State.selectedPlayer.validate();
             bool shouldEndListBox = ImGui::ListBoxHeader("###players#list", ImVec2(200, 230) * State.dpiScale);
             auto localData = GetPlayerData(*Game::pLocalPlayer);
@@ -674,6 +657,31 @@ namespace PlayersTab {
                                 }
                                 });
                             future.get();
+                        }
+                    }
+
+                    if (!IsHost() && IsInLobby() && selectedPlayers.size() == 1 && selectedPlayers[0].has_value()
+                        && !selectedPlayers[0].validate().is_LocalPlayer()) {
+                        ImGui::SameLine();
+                        if (AnimatedButton("Auto Votekick")) {
+                            auto p = selectedPlayers[0].validate().get_PlayerControl();
+                            auto pd = GetPlayerData(p);
+                            if (pd != nullptr) {
+                                std::string targetId = pd->fields.FriendCode ? convert_from_string(pd->fields.FriendCode) : "";
+                                if (targetId.empty()) {
+                                    auto outfit = GetPlayerOutfit(pd);
+                                    if (outfit && outfit->fields.PlayerName) targetId = convert_from_string(outfit->fields.PlayerName);
+                                }
+                                if (!targetId.empty()) {
+                                    State.AutoVotekickTargetFC = targetId;
+                                    State.AutoVotekickActive = true;
+                                    State.AutoVotekickWaitingForRejoin = false;
+                                    State.AutoVotekickPendingScan = false;
+                                    State.AutoVotekickScanTimeout = 0.f;
+                                    State.AutoVotekickRoundsLeft = 2; 
+                                    State.lobbyRpcQueue.push(new RpcVoteKick(p));
+                                }
+                            }
                         }
                     }
 

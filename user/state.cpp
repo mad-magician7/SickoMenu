@@ -248,7 +248,6 @@ void Settings::Load() {
         JSON_TRYGET("DisableMeetings", this->DisableMeetings);
         JSON_TRYGET("DisableSabotages", this->DisableSabotages);
         JSON_TRYGET("DisableAllVotekicks", this->DisableAllVotekicks);
-        JSON_TRYGET("AutoRejoinOnKick", this->AutoRejoinOnKick);
         JSON_TRYGET("DisableRoleManager", this->DisableRoleManager);
 
         JSON_TRYGET("ShowRadar", this->ShowRadar);
@@ -372,6 +371,7 @@ void Settings::Load() {
         JSON_TRYGET("ReportOnMurder", this->ReportOnMurder);
         JSON_TRYGET("PreventSelfReport", this->PreventSelfReport);
         JSON_TRYGET("AutoRejoin", this->AutoRejoin);
+        JSON_TRYGET("ShowVotekickNotifications", this->ShowVotekickNotifications);
         JSON_TRYGET("DisableShushAnimation", this->DisableShushAnimation);
         JSON_TRYGET("OldStylePingText", this->OldStylePingText);
         JSON_TRYGET("NoSeekerAnim", this->NoSeekerAnim);
@@ -866,7 +866,6 @@ void Settings::Save() {
                 { "DisableMeetings", this->DisableMeetings },
                 { "DisableSabotages", this->DisableSabotages },
                 { "DisableAllVotekicks", this->DisableAllVotekicks },
-                { "AutoRejoinOnKick", this->AutoRejoinOnKick },
                 { "DisableRoleManager", this->DisableRoleManager },
 
                 { "ShowRadar", this->ShowRadar },
@@ -1060,6 +1059,7 @@ void Settings::Save() {
                 { "ReportOnMurder", this->ReportOnMurder },
                 { "PreventSelfReport", this->PreventSelfReport },
                 { "AutoRejoin", this->AutoRejoin },
+                { "ShowVotekickNotifications", this->ShowVotekickNotifications },
                 { "DisableShushAnimation", this->DisableShushAnimation },
                 { "OldStylePingText", this->OldStylePingText },
                 { "NoSeekerAnim", this->NoSeekerAnim },

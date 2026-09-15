@@ -364,7 +364,12 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 		std::string shorthandName = cmd.substr(1); // strip leading '/'
 		const Settings::ChatPreset* shorthandPreset = FindChatPresetByName(shorthandName);
 		if (shorthandPreset != nullptr) {
-			if (PlayerHasPermission(actor, "preset")) SendChatPreset(*shorthandPreset);
+			if (PlayerHasPermission(actor, "preset")) {
+				SendChatPreset(*shorthandPreset);
+				auto sourceEvt = GetEventPlayerControl(actor);
+				if (sourceEvt.has_value())
+					State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " used preset \"" + shorthandPreset->Name + "\""));
+			}
 			return true;
 		}
 	}
@@ -395,7 +400,12 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 	else if (cmd == "/preset") {
 		if (PlayerHasPermission(actor, "preset") && !rawArgs.empty()) {
 			const Settings::ChatPreset* preset = FindChatPresetByName(argsLower);
-			if (preset != nullptr) SendChatPreset(*preset);
+			if (preset != nullptr) {
+				SendChatPreset(*preset);
+				auto sourceEvt = GetEventPlayerControl(actor);
+				if (sourceEvt.has_value())
+					State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " used preset \"" + preset->Name + "\""));
+			}
 		}
 	}
 	else if (cmd == "/kick" || cmd == "/kickc" || cmd == "/ban" || cmd == "/banc") {
@@ -403,7 +413,7 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 			bool byColor = (cmd == "/kickc" || cmd == "/banc");
 			bool isBan = (cmd == "/ban" || cmd == "/banc");
 			PlayerControl* target = byColor ? ResolveTargetByColor(FindColorIdByName(argsLower)) : ResolveTargetByName(argsLower);
-			if (target != NULL && GetPlayerMaxRank(actor) > GetPlayerMaxRank(target)) {
+			if (target != NULL && (IsHost() || GetPlayerMaxRank(actor) > GetPlayerMaxRank(target))) {
 				InnerNetClient_KickPlayer((InnerNetClient*)(*Game::pAmongUsClient), target->fields._.OwnerId, isBan, NULL);
 				auto sourceEvt = GetEventPlayerControl(actor);
 				auto targetEvt = GetEventPlayerControl(target);
@@ -449,6 +459,9 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 							State.Save();
 							if (State.NotifyWarned) SendPrivateWarnMessage(target, warnReason, State.WarnedFriendCodes[targetFc]);
 							PlayerControl_RpcSendChat(*Game::pLocalPlayer, convert_to_string(targetName + " has been warned: " + warnReason), NULL);
+							auto sourceEvt = GetEventPlayerControl(actor);
+							if (sourceEvt.has_value())
+								State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " warned " + targetName + ": " + warnReason));
 						}
 					}
 				}
@@ -493,6 +506,9 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 							}
 							State.Save();
 							PlayerControl_RpcSendChat(*Game::pLocalPlayer, convert_to_string("Removed warn #" + std::to_string(reasonIndex + 1) + " from " + targetName), NULL);
+							auto sourceEvt = GetEventPlayerControl(actor);
+							if (sourceEvt.has_value())
+								State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " removed a warn from " + targetName));
 						}
 					}
 				}
@@ -531,22 +547,34 @@ static bool HandleChatCommand(PlayerControl* actor, const std::string& message) 
 		if (PlayerHasPermission(actor, "callmeeting") && IsInGame() && !State.InMeeting) {
 			RepairSabotage(*Game::pLocalPlayer);
 			State.rpcQueue.push(new RpcReportBody({}));
+			auto sourceEvt = GetEventPlayerControl(actor);
+			if (sourceEvt.has_value())
+				State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " called a meeting"));
 		}
 	}
 	else if (cmd == "/endmeeting") {
 		if (PlayerHasPermission(actor, "endmeeting") && State.InMeeting) {
 			State.rpcQueue.push(new RpcEndMeeting());
 			State.InMeeting = false;
+			auto sourceEvt = GetEventPlayerControl(actor);
+			if (sourceEvt.has_value())
+				State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " ended the meeting"));
 		}
 	}
 	else if (cmd == "/start") {
 		if (PlayerHasPermission(actor, "start") && IsInLobby()) {
 			InnerNetClient_SendStartGame((InnerNetClient*)(*Game::pAmongUsClient), NULL);
+			auto sourceEvt = GetEventPlayerControl(actor);
+			if (sourceEvt.has_value())
+				State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " started the game"));
 		}
-	}
+		}
 	else if (cmd == "/end") {
 		if (PlayerHasPermission(actor, "end") && IsInGame()) {
 			State.rpcQueue.push(new RpcEndGame(GameOverReason__Enum(0)));
+			auto sourceEvt = GetEventPlayerControl(actor);
+			if (sourceEvt.has_value())
+				State.liveConsoleEvents.emplace_back(std::make_unique<ModerationEvent>(sourceEvt.value(), sourceEvt->playerName + " force-ended the game"));
 		}
 	}
 
@@ -563,7 +591,7 @@ void dChatController_AddChat(ChatController* __this, PlayerControl* sourcePlayer
 		auto local = GetPlayerData(*Game::pLocalPlayer);
 		std::string message = convert_from_string(chatText);
 		std::string newChatText = message;
-		if (IsHost() && sourcePlayer != *Game::pLocalPlayer) {
+		if (sourcePlayer != *Game::pLocalPlayer) {
 			HandleChatCommand(sourcePlayer, message);
 		}
 		if (State.BetterChatNotifications && __this->fields.state == ChatControllerState__Enum::Closed &&
@@ -878,8 +906,13 @@ void dChatController_Update(ChatController* __this, MethodInfo* method) {
 
 	if (!(IsHost() || !State.SafeMode)) State.ChatSpamMode = 0;
 
+	if (!State.PanicMode && State.SafeMode && State.ChatSpam && State.ChatSpamUsePreset && (State.ChatSpamMode == 0 || State.ChatSpamMode == 2) && (IsInGame() || IsInLobby()) && __this->fields.timeSinceLastMessage >= State.ChatSpamDelay && State.Mod_PendingRulesMessages.empty() && !State.ChatPresets.empty()) {
+		SendChatPreset(State.ChatPresets[State.SelectedChatPreset]);
+		State.MessageSent = true;
+	}
+
 	if (IsChatValid(State.chatMessage)) {
-		if (!State.PanicMode && State.SafeMode && State.ChatSpam && (State.ChatSpamMode == 0 || State.ChatSpamMode == 2) && (IsInGame() || IsInLobby()) && __this->fields.timeSinceLastMessage >= 3.5f) {
+		if (!State.PanicMode && State.SafeMode && State.ChatSpam && !State.ChatSpamUsePreset && (State.ChatSpamMode == 0 || State.ChatSpamMode == 2) && (IsInGame() || IsInLobby()) && __this->fields.timeSinceLastMessage >= State.ChatSpamDelay) {
 			PlayerControl_RpcSendChat(*Game::pLocalPlayer, convert_to_string(State.chatMessage), NULL);
 			//remove rpc queue stuff cuz of delay and anticheat kick
 			State.MessageSent = true;
@@ -1153,7 +1186,7 @@ void dChatController_SendFreeChat(ChatController* __this, MethodInfo* method) {
 			return; //we don't want the chat to know we're using "aum"
 		}
 
-		if (IsHost() && chatText[0] == '/') {
+		if (chatText[0] == '/') {
 			if (HandleChatCommand(*Game::pLocalPlayer, chatText)) return;
 		}
 

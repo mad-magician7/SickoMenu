@@ -123,19 +123,19 @@ static std::string strToLower(std::string str) {
 
 namespace GameTab {
     enum Groups {
-        General,
-        Chat,
-        Anticheat,
-        Utils,
-        History,
-        Options
-    };
+    General,
+    Chat,
+    Anticheat,
+    Utils,
+    History,
+    Options
+};
 
     static bool openGeneral = true;
     static bool openChat = false;
     static bool openAnticheat = false;
     static bool openUtils = false;
-        static bool openHistory = false;
+    static bool openHistory = false;
     static bool openOptions = false;
 
     void CloseOtherGroups(Groups group) {
@@ -535,6 +535,15 @@ namespace GameTab {
                 if (State.RizzUpEveryone) State.RizzUpEveryone = false;
                 State.Save();
             }
+            if (State.ChatSpam) {
+                if (!State.ChatPresets.empty()) {
+                    ImGui::SameLine();
+                    if (ToggleButton("Spam Selected Preset", &State.ChatSpamUsePreset))
+                        State.Save();
+                }
+                if (SteppedSliderFloat("Spam Delay", &State.ChatSpamDelay, 2.f, 30.f, 0.5f, "%.1fs", ImGuiSliderFlags_NoInput))
+                    State.Save();
+            }
             if (((IsHost() && IsInGame()) || !State.SafeMode) && State.ChatSpamMode) ImGui::SameLine();
             if ((IsHost() || !State.SafeMode) && State.ChatSpamMode && ToggleButton("Spam by Everyone", &State.ChatSpamEveryone))
             {
@@ -726,9 +735,9 @@ namespace GameTab {
                 bool changed = false;
 
                 ImGui::TextDisabled("Default action taken when a detection isn't specifically overridden below.");
-                changed = changed || CustomListBoxInt("Host Punishment", &State.SMAC_HostPunishment, SMAC_HOST_PUNISHMENTS, 85.0f * State.dpiScale);
+                changed = changed || CustomListBoxInt("##hostpunishment", &State.SMAC_HostPunishment, SMAC_HOST_PUNISHMENTS, 85.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Host Action");
                 ImGui::SameLine();
-                changed = changed || CustomListBoxInt("Regular Punishment", &State.SMAC_Punishment, SMAC_PUNISHMENTS, 85.0f * State.dpiScale);
+                changed = changed || CustomListBoxInt("##regularpunishment", &State.SMAC_Punishment, SMAC_PUNISHMENTS, 85.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Regular Action");
 
                 ImGui::Dummy(ImVec2(0, 1) * State.dpiScale);
                 ImGui::TextDisabled("Override the action for a specific detection.");
@@ -757,11 +766,11 @@ namespace GameTab {
                 overrides[catKey] = std::clamp(overrides[catKey], 0, (int)SMAC_PUNISHMENTS.size() - 1);
 
                 ImGui::SetNextItemWidth(150.0f * State.dpiScale);
-                CustomListBoxInt("Category", &selectedCategory, SMAC_CATEGORIES, 150.0f * State.dpiScale);
+                CustomListBoxInt("##category", &selectedCategory, SMAC_CATEGORIES, 150.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Detection");
 
-                changed = changed || CustomListBoxInt("Host Override", &hostOverrides[catKey], SMAC_HOST_PUNISHMENTS, 85.0f * State.dpiScale);
+                changed = changed || CustomListBoxInt("##hostoverride", &hostOverrides[catKey], SMAC_HOST_PUNISHMENTS, 85.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Host Override");
                 ImGui::SameLine();
-                changed = changed || CustomListBoxInt("Regular Override", &overrides[catKey], SMAC_PUNISHMENTS, 85.0f * State.dpiScale);
+                changed = changed || CustomListBoxInt("##regularoverride", &overrides[catKey], SMAC_PUNISHMENTS, 85.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Regular Override");
                 if (changed) State.Save();
             }
             ImGui::Dummy(ImVec2(0, 2)* State.dpiScale);
@@ -1697,8 +1706,8 @@ namespace GameTab {
                     if (AnimatedButton("Clear History##lobby"))
                         State.LobbyHistory.clear();
                 }
+                }
             }
-        }
 
         if (openOptions) {
             if ((IsInGame() || IsInLobby()) && GameOptions().HasOptions()) {
