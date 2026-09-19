@@ -152,8 +152,18 @@ public:
     bool VotekickRejoinPending = false;
     float VotekickRejoinDelay = 0.f;
     std::string VotekickRejoinLobbyCode = "";
+    bool AutoVotekickActive = false;
+    std::string AutoVotekickTargetFC = "";
+    bool AutoVotekickWaitingForRejoin = false;
+    int AutoVotekickRoundsLeft = 0; 
+    bool AutoVotekickPendingScan = false;
+    float AutoVotekickScanTimeout = 0.f;
+    bool AutoKickHostActive = false;
+    bool ShowVotekickNotifications = false;
     std::string AutoJoinLobbyCode = "";
     bool JoinLobby = false;
+    bool CreateLobby = false;
+    int CreateLobbyFilterTag = 3; // 0=None, 1=Beginner, 2=Intermediate, 3=Expert
     std::string JoinLobbyCode = "";
     std::unordered_map<std::string, std::string> LobbyHostCache;
     int LobbyHistoryLimit = 20;
@@ -714,12 +724,14 @@ public:
     Game::PlayerId VoteOffPlayerId = Game::HasNotVoted;
     bool LevelFarm = false;
     bool AutoStartGame = false;
+    bool AutoEndGame = false;
     bool AutoKickSlackers = false;
     bool AutoKickSlackersIgnoreWhitelist = true;
     int AutoKickSlackersThreshold = 50;
     int AutoKickSlackersGrace = 60;
 
-    int AutoStartTimer = 60;
+    float AutoStartTimer = 60.f;
+    float AutoEndTimer = 30.f;
     bool AutoStartGamePlayers = false;
     int AutoStartPlayerCount = 15;
     bool AutoOpenDoors = false;
@@ -730,6 +742,22 @@ public:
 
     bool murderLoop = false;
     bool suicideLoop = false;
+    enum class LevelFarmAutoPhase {
+        Idle, CreatingLobby, WaitingLobbyReady, StartingFarmGame, WaitingFarmGameStart, WaitingBeforeFarm, StartingFarm, Farming,
+        EndingFarmSequence,
+        WaitingEndGameScreen, PressingPlayAgain, WaitingLobbyAfterPlayAgain,
+        QuickStarting, WaitingGameStart, QuickEnding,
+        LeavingForNextRound
+    };
+    enum class FarmEndPhase { None, SetRealRole, SetFakeRole, EndGame };
+    FarmEndPhase CurrentFarmEndPhase = FarmEndPhase::None;
+    float FarmEndPhaseTimer = 0.f;
+    bool AutoLevelFarmActive = false;
+    LevelFarmAutoPhase AutoLevelFarmPhase = LevelFarmAutoPhase::Idle;
+    int AutoLevelFarmQuickCyclesDone = 0;
+    int AutoLevelFarmQuickCyclesTarget = 100;
+    float AutoLevelFarmPhaseTimer = 0.f;
+    int AutoLevelFarmRoundsCompleted = 0;
     bool farmLoop = false;
     int murderCount = 0;
     int murderDelay = 0;
@@ -737,7 +765,7 @@ public:
     int suicideDelay = 0;
     int farmCount = 0;
     int farmDelay = 0;
-
+    float AutoLevelFarmStartDelay = 0.f; // seconds to wait in-game before farming starts - tweak this to test timing theories
     Settings()
     {
         Replay::Reset();

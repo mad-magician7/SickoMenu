@@ -372,6 +372,8 @@ void Settings::Load() {
         JSON_TRYGET("ReportOnMurder", this->ReportOnMurder);
         JSON_TRYGET("PreventSelfReport", this->PreventSelfReport);
         JSON_TRYGET("AutoRejoin", this->AutoRejoin);
+        JSON_TRYGET("AutoKickHostActive", this->AutoKickHostActive);
+        JSON_TRYGET("ShowVotekickNotifications", this->ShowVotekickNotifications);
         JSON_TRYGET("DisableShushAnimation", this->DisableShushAnimation);
         JSON_TRYGET("OldStylePingText", this->OldStylePingText);
         JSON_TRYGET("NoSeekerAnim", this->NoSeekerAnim);
@@ -1060,6 +1062,8 @@ void Settings::Save() {
                 { "ReportOnMurder", this->ReportOnMurder },
                 { "PreventSelfReport", this->PreventSelfReport },
                 { "AutoRejoin", this->AutoRejoin },
+                { "AutoKickHostActive", this->AutoKickHostActive },
+                { "ShowVotekickNotifications", this->ShowVotekickNotifications },
                 { "DisableShushAnimation", this->DisableShushAnimation },
                 { "OldStylePingText", this->OldStylePingText },
                 { "NoSeekerAnim", this->NoSeekerAnim },

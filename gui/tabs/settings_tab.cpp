@@ -809,6 +809,12 @@ namespace SettingsTab {
 
 			ImGui::Dummy(ImVec2(4, 4)* State.dpiScale);
 
+			CheckKeybindEdit(HotKey(State.KeyBinds.Create_Lobby));
+			ImGui::SameLine(100 * State.dpiScale);
+			ImGui::Text("Create Lobby");
+
+			ImGui::Dummy(ImVec2(4, 4)* State.dpiScale);
+
 			CheckKeybindEdit(HotKey(State.KeyBinds.Toggle_Hud));
 			ImGui::SameLine(100 * State.dpiScale);
 			ImGui::Text("Enable/Disable HUD");

@@ -967,6 +967,18 @@ namespace GameTab {
         }
 
         if (openUtils) {
+            if (IsHost()) {
+                if (ToggleButton("Auto Level Farm (Repeat Forever)", &State.AutoLevelFarmActive)) {
+                    if (!State.AutoLevelFarmActive)
+                        State.AutoLevelFarmPhase = Settings::LevelFarmAutoPhase::Idle;
+                    State.Save();
+                }
+                if (State.AutoLevelFarmActive) {
+                    ImGui::Text(std::format("Rounds completed: {} | Quick cycles: {}/{}",
+                        State.AutoLevelFarmRoundsCompleted, State.AutoLevelFarmQuickCyclesDone, State.AutoLevelFarmQuickCyclesTarget).c_str());
+                }
+                ImGui::Dummy(ImVec2(0, 5) * State.dpiScale);
+            }
             /*if (ToggleButton("Ignore Whitelisted Players [Exploits]", &State.Destruct_IgnoreWhitelist)) {
                 State.Save();
             }*/
@@ -975,6 +987,10 @@ namespace GameTab {
             }
 
             if (IsInLobby() && ToggleButton("Attempt to Crash Lobby", &State.CrashSpamReport)) {
+                State.Save();
+            }
+
+            if (ToggleButton("Force Host", &State.AutoKickHostActive)) {
                 State.Save();
             }
 
@@ -1266,7 +1282,7 @@ namespace GameTab {
                         selfFC = convert_from_string((*Game::pLocalPlayer)->fields.FriendCode);
                     }
 
-                    if (!selfFC.empty() && friendCodeToTempBan == selfFC) { }
+                    if (!selfFC.empty() && friendCodeToTempBan == selfFC) {}
                     else {
                         int64_t totalSeconds = 0;
                         totalSeconds += static_cast<int64_t>(banDays) * 86400;
