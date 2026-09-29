@@ -167,6 +167,49 @@ namespace PlayersTab {
                 State.selectedPlayer = {};
             }
 
+            if (!State.PendingRejoinTargetFC.empty() && State.PendingRejoinReady) {
+                for (auto pc : GetAllPlayerControl()) {
+                    if (pc == nullptr) continue;
+                    auto pd = GetPlayerData(pc);
+                    if (pd == nullptr || pd->fields.Disconnected) continue;
+                    std::string fc = convert_from_string(pd->fields.FriendCode);
+                    std::string name = convert_from_string(NetworkedPlayerInfo_get_PlayerName(pd, nullptr));
+                    if (fc == State.PendingRejoinTargetFC || name == State.PendingRejoinTargetFC) {
+                        State.selectedPlayer = PlayerSelection(pc);
+                        State.selectedPlayers = { pd->fields.PlayerId };
+                        State.PendingRejoinTargetFC = "";
+                        State.PendingRejoinReady = false;
+                        break;
+                    }
+                }
+            }
+
+            if ((selectingShiftingToPlayer || selectingTurningToPlayer) && !((IsHost() && IsInGame()) || !State.SafeMode)) {
+                selectingShiftingToPlayer = false;
+                selectingTurningToPlayer = false;
+                playersToShift = {};
+                playerToShiftName = "";
+            }
+
+            if (playersToShift.size() != 0) {
+                std::vector<Game::PlayerId> newPlayersToShift = {};
+                std::string pName = "";
+
+                for (auto pId : playersToShift) {
+                    auto pc = GetPlayerControlById(pId);
+                    if (pc == NULL) continue;
+
+                    auto outfit = GetPlayerOutfit(GetPlayerData(pc));
+                    if (outfit != NULL) {
+                        pName = convert_from_string(outfit->fields.PlayerName);
+                        newPlayersToShift.push_back(pId);
+                    }
+                }
+
+                if (newPlayersToShift.size() == 1) playerToShiftName = pName;
+                playersToShift = newPlayersToShift;
+            }
+
             auto selectedPlayer = State.selectedPlayer.validate();
             bool shouldEndListBox = ImGui::ListBoxHeader("###players#list", ImVec2(200, 230) * State.dpiScale);
             auto localData = GetPlayerData(*Game::pLocalPlayer);
