@@ -16,7 +16,7 @@ static std::string CleanChatPresetName(std::string cpName) {
 }
 
 void Settings::Load() {
-    this->SickoVersion = "v5.0.3";
+    this->SickoVersion = "v5.1_pr2";
 
     auto path = getModulePath(NULL);
     auto configPath = path.parent_path() / "SickoMenu" / "sicko-selected-config.json";
@@ -120,6 +120,11 @@ void Settings::Load() {
         this->RoundingRadiusMultiplier = std::clamp(this->RoundingRadiusMultiplier, 0.f, 2.f);
         JSON_TRYGET("ExtraCommands", this->ExtraCommands);
 
+        JSON_TRYGET("ToastsOnTop", this->ToastsOnTop);
+        JSON_TRYGET("ToastPositionX", this->ToastPositionX);
+        JSON_TRYGET("MaxToasts", this->MaxToasts);
+        JSON_TRYGET("ToastMaxDuration", this->ToastMaxDuration);
+
         // JSON_TRYGET("NoAbilityCD", this->NoAbilityCD);
         JSON_TRYGET("DarkMode", this->DarkMode);
         JSON_TRYGET("CustomGameTheme", this->CustomGameTheme);
@@ -170,6 +175,7 @@ void Settings::Load() {
         JSON_TRYGET("FakeRoleId", this->FakeRoleId);
         JSON_TRYGET("AutoFakeRole", this->AutoFakeRole);
         JSON_TRYGET("PauseVentBlockingWhileVenting", this->PauseVentBlockingWhileVenting);
+        JSON_TRYGET("RandomSpawns", this->RandomSpawns);
 
         JSON_TRYGET("AutoApplyHostPreset", this->AutoApplyHostPreset);
         if (j.contains("HostPresets") && j["HostPresets"].is_array()) {
@@ -277,7 +283,12 @@ void Settings::Load() {
         JSON_TRYGET("ReplayClearAfterMeeting", this->Replay_ClearAfterMeeting);
 
         JSON_TRYGET("ShowEsp", this->ShowEsp);
+        JSON_TRYGET("ShowEsp_Players", this->ShowEsp_Players);
         JSON_TRYGET("ShowEsp_Ghosts", this->ShowEsp_Ghosts);
+        JSON_TRYGET("ShowEsp_DeadBodies", this->ShowEsp_DeadBodies);
+        JSON_TRYGET("ShowEsp_LineTextShadows", this->ShowEsp_LineTextShadows);
+        JSON_TRYGET("ShowEsp_LineThickness", this->ShowEsp_LineThickness);
+        JSON_TRYGET("ShowEsp_TextSize", this->ShowEsp_TextSize);
         JSON_TRYGET("ShowEsp_Box", this->ShowEsp_Box);
         JSON_TRYGET("ShowEsp_Tracers", this->ShowEsp_Tracers);
         JSON_TRYGET("ShowEsp_Distance", this->ShowEsp_Distance);
@@ -308,6 +319,7 @@ void Settings::Load() {
         JSON_TRYGET("ChatAlwaysActive", this->ChatAlwaysActive);
         JSON_TRYGET("ReadGhostMessages", this->ReadGhostMessages);
         JSON_TRYGET("ReadAndSendSickoChat", this->ReadAndSendSickoChat);
+        JSON_TRYGET("MoveMatchInfoGuide", this->MoveMatchInfoGuide);
         JSON_TRYGET("CustomName", this->CustomName);
         JSON_TRYGET("RgbName", this->RgbName);
         JSON_TRYGET("RgbMethod", this->RgbMethod);
@@ -345,6 +357,7 @@ void Settings::Load() {
         JSON_TRYGET("NameColor2_G", this->NameColor2.y);
         JSON_TRYGET("NameColor2_B", this->NameColor2.z);
         JSON_TRYGET("NameColor2_A", this->NameColor2.w);
+        JSON_TRYGET("AutoStartTimer", this->AutoStartTimer);
         JSON_TRYGET("AutoOpenDoors", this->AutoOpenDoors);
         JSON_TRYGET("MoveInVentAndShapeshift", this->MoveInVentAndShapeshift);
         JSON_TRYGET("AlwaysMove", this->AlwaysMove);
@@ -393,6 +406,7 @@ void Settings::Load() {
         JSON_TRYGET("ImpostorCount", this->ImpostorCount);
 
         if (this->ShowMenuOnStartup) JSON_TRYGET("ShowConsole", this->ShowConsole);
+        JSON_TRYGET("ShowConsoleEventsAsToasts", this->ShowConsoleEventsAsToasts);
         JSON_TRYGET("ShowUnityLogs", this->ShowUnityLogs);
         //JSON_TRYGET("ShowHookLogs", this->ShowHookLogs);
 
@@ -405,6 +419,7 @@ void Settings::Load() {
         JSON_TRYGET("RotateRadius", this->RotateRadius);
         JSON_TRYGET("RelativeTeleport", this->RelativeTeleport);
         JSON_TRYGET("IgnoreVentTpSelf", this->IgnoreVentTpSelf);
+        JSON_TRYGET("IgnoreZiplineSelf", this->IgnoreZiplineSelf);
         JSON_TRYGET("ShowKillCD", this->ShowKillCD);
 
         JSON_TRYGET("Confuser", this->confuser);
@@ -413,6 +428,14 @@ void Settings::Load() {
         JSON_TRYGET("ConfuseOnKill", this->confuseOnKill);
         JSON_TRYGET("ConfuseOnVent", this->confuseOnVent);
         JSON_TRYGET("ConfuseOnMeeting", this->confuseOnMeeting);
+
+        JSON_TRYGET("AntiExploit_DisconnectPenalties", this->AntiExploit_DisconnectPenalties);
+        JSON_TRYGET("AntiExploit_UnauthorizedSabotages", this->AntiExploit_UnauthorizedSabotages);
+        JSON_TRYGET("AntiExploit_UnauthorizedTeleports", this->AntiExploit_UnauthorizedTeleports);
+        JSON_TRYGET("AntiExploit_UnauthorizedZiplines", this->AntiExploit_UnauthorizedZiplines);
+        JSON_TRYGET("AntiExploit_AttemptToBan", this->AntiExploit_AttemptToBan);
+        JSON_TRYGET("AntiExploit_VotekicksAgainstSelfHost", this->AntiExploit_VotekicksAgainstSelfHost);
+        JSON_TRYGET("AntiExploit_CrashLobbyHost", this->AntiExploit_CrashLobbyHost);
 
         JSON_TRYGET("InfiniteMeetings", this->InfiniteMeetings);
         JSON_TRYGET("NoLadderZiplineCooldown", this->NoLadderZiplineCooldown);
@@ -596,6 +619,10 @@ void Settings::Load() {
         JSON_TRYGET("JudgeColor_G", this->JudgeColor.y);
         JSON_TRYGET("JudgeColor_B", this->JudgeColor.z);
         JSON_TRYGET("JudgeColor_A", this->JudgeColor.w);
+        JSON_TRYGET("InfluencerColor_R", this->InfluencerColor.x);
+        JSON_TRYGET("InfluencerColor_G", this->InfluencerColor.y);
+        JSON_TRYGET("InfluencerColor_B", this->InfluencerColor.z);
+        JSON_TRYGET("InfluencerColor_A", this->InfluencerColor.w);
 
         JSON_TRYGET("HostColor_R", this->HostColor.x);
         JSON_TRYGET("HostColor_G", this->HostColor.y);
@@ -810,6 +837,11 @@ void Settings::Save() {
                 { "RoundingRadiusMultiplier", this->RoundingRadiusMultiplier },
                 { "ExtraCommands", this->ExtraCommands },
 
+                { "ToastsOnTop", this->ToastsOnTop },
+                { "ToastPositionX", this->ToastPositionX },
+                { "MaxToasts", this->MaxToasts },
+                { "ToastMaxDuration", this->ToastMaxDuration },
+
                 // { "NoAbilityCD", this->NoAbilityCD },
                 { "DarkMode", this->DarkMode },
                 { "CustomGameTheme", this->CustomGameTheme },
@@ -861,6 +893,7 @@ void Settings::Save() {
                 { "FakeRoleId", this->FakeRoleId },
                 { "AutoFakeRole", this->AutoFakeRole },
                 { "PauseVentBlockingWhileVenting", this->PauseVentBlockingWhileVenting },
+                { "RandomSpawns", this->RandomSpawns },
 
                 { "NoGameEnd", this->NoGameEnd },
                 { "DisableMeetings", this->DisableMeetings },
@@ -962,7 +995,12 @@ void Settings::Save() {
                     return arr;
                 }() },
                 { "ShowEsp", this->ShowEsp },
+                { "ShowEsp_Players", this->ShowEsp_Players },
                 { "ShowEsp_Ghosts", this->ShowEsp_Ghosts },
+                { "ShowEsp_DeadBodies", this->ShowEsp_DeadBodies },
+                { "ShowEsp_LineTextShadows", this->ShowEsp_LineTextShadows },
+                { "ShowEsp_LineThickness", this->ShowEsp_LineThickness },
+                { "ShowEsp_TextSize", this->ShowEsp_TextSize },
                 { "ShowEsp_Box", this->ShowEsp_Box },
                 { "ShowEsp_Tracers", this->ShowEsp_Tracers },
                 { "ShowEsp_Distance", this->ShowEsp_Distance },
@@ -993,6 +1031,7 @@ void Settings::Save() {
                 { "ChatAlwaysActive", this->ChatAlwaysActive },
                 { "ReadGhostMessages", this->ReadGhostMessages },
                 { "ReadAndSendSickoChat", this->ReadAndSendSickoChat },
+                { "MoveMatchInfoGuide", this->MoveMatchInfoGuide },
                 { "CustomName", this->CustomName },
                 { "RgbName", this->RgbName },
                 { "RgbMethod", this->RgbMethod },
@@ -1033,6 +1072,7 @@ void Settings::Save() {
                 { "NameColor2_G", this->NameColor2.y },
                 { "NameColor2_B", this->NameColor2.z },
                 { "NameColor2_A", this->NameColor2.w },
+                { "AutoStartTimer", this->AutoStartTimer },
                 { "AutoOpenDoors", this->AutoOpenDoors },
                 { "MoveInVentAndShapeshift", this->MoveInVentAndShapeshift },
                 { "AlwaysMove", this->AlwaysMove },
@@ -1084,6 +1124,7 @@ void Settings::Save() {
                 { "ImpostorCount", this->ImpostorCount },
 
                 { "ShowConsole", this->ShowConsole },
+                { "ShowConsoleEventsAsToasts", this->ShowConsoleEventsAsToasts },
                 { "ShowUnityLogs", this->ShowUnityLogs },
                 //{ "ShowHookLogs", this->ShowHookLogs },
 
@@ -1091,6 +1132,7 @@ void Settings::Save() {
                 { "RotateRadius", this->RotateRadius },
                 { "RelativeTeleport", this->RelativeTeleport },
                 { "IgnoreVentTpSelf", this->IgnoreVentTpSelf },
+                { "IgnoreZiplineSelf", this->IgnoreZiplineSelf },
                 { "ShowKillCD", this->ShowKillCD },
 
                 { "Confuser", this->confuser },
@@ -1099,6 +1141,14 @@ void Settings::Save() {
                 { "ConfuseOnKill", this->confuseOnKill },
                 { "ConfuseOnVent", this->confuseOnVent },
                 { "ConfuseOnMeeting", this->confuseOnMeeting },
+
+                { "AntiExploit_DisconnectPenalties", this->AntiExploit_DisconnectPenalties },
+                { "AntiExploit_UnauthorizedSabotages", this->AntiExploit_UnauthorizedSabotages },
+                { "AntiExploit_UnauthorizedTeleports", this->AntiExploit_UnauthorizedTeleports },
+                { "AntiExploit_UnauthorizedZiplines", this->AntiExploit_UnauthorizedZiplines },
+                { "AntiExploit_AttemptToBan", this->AntiExploit_AttemptToBan },
+                { "AntiExploit_VotekicksAgainstSelfHost", this->AntiExploit_VotekicksAgainstSelfHost },
+                { "AntiExploit_CrashLobbyHost", this->AntiExploit_CrashLobbyHost },
 
                 { "InfiniteMeetings", this->InfiniteMeetings },
                 { "NoLadderZiplineCooldown", this->NoLadderZiplineCooldown },
@@ -1262,6 +1312,10 @@ void Settings::Save() {
                 { "JudgeColor_G", this->JudgeColor.y },
                 { "JudgeColor_B", this->JudgeColor.z },
                 { "JudgeColor_A", this->JudgeColor.w },
+                { "InfluencerColor_R", this->InfluencerColor.x },
+                { "InfluencerColor_G", this->InfluencerColor.y },
+                { "InfluencerColor_B", this->InfluencerColor.z },
+                { "InfluencerColor_A", this->InfluencerColor.w },
                 { "HostColor_R", this->HostColor.x },
                 { "HostColor_G", this->HostColor.y },
                 { "HostColor_B", this->HostColor.z },

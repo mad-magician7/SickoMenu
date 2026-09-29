@@ -41,7 +41,7 @@ namespace SettingsTab {
 
 	void Render() {
 		ImGui::SameLine(100 * State.dpiScale);
-		ImGui::BeginChild("###Settings", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
+		ImGui::BeginChild("###SettingsButtons", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
 		if (TabGroup("General", openGeneral)) {
 			CloseOtherGroups(Groups::General);
 		}
@@ -57,6 +57,8 @@ namespace SettingsTab {
 		if (TabGroup("Keybinds", openKeybinds)) {
 			CloseOtherGroups(Groups::Keybinds);
 		}
+
+		ImGui::BeginChild("###Settings", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
 		if (openGeneral) {
 			ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
 			if (ToggleButton("Show Keybinds", &State.ShowKeybinds)) {
@@ -223,7 +225,7 @@ namespace SettingsTab {
 
 			// you can only join a lobby if you have the same name as what your requested name is, when trying to join it
 			if (IsNameValid(State.userName) && (!State.SafeMode ||
-				State.CurrentScene == "MatchMaking" || State.CurrentScene == "MainMenu" || State.CurrentScene == "Tutorial")) {
+				State.CurrentScene == "MatchMaking" || State.CurrentScene == "MainMenu" || State.CurrentScene == "Tutorial" || State.CurrentScene == "HowToPlay")) {
 				if (AnimatedButton("Set as Account Name")) {
 					SetPlayerName(State.userName);
 					LOG_INFO("Successfully set account name to \"" + State.userName + "\"");
@@ -330,12 +332,9 @@ namespace SettingsTab {
 				InputString("Friend Code (For New/Guest Account ONLY)", &State.NewFriendCode);
 				if (!isFriendCodeValid) ImGui::PopStyleColor();
 
-				auto friendCodeValidText = "This new friend code should be <= 10 characters long and cannot have spaces.";
-
-				if (isFriendCodeValid)
-					ImGui::Text(friendCodeValidText);
-				else
-					ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), friendCodeValidText);
+				auto friendCodeValidText = "This new friend code should be <= 10 characters long and cannot have spaces.\nLeave this blank to generate a random friend code.";
+				if (isFriendCodeValid) ImGui::Text(friendCodeValidText);
+				else ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), friendCodeValidText);
 			}
 			if (ToggleButton("Spoof Level", &State.SpoofLevel)) {
 				State.Save();
@@ -356,8 +355,6 @@ namespace SettingsTab {
 				ImGui::SameLine();
 				if (CustomListBoxIntColored("Platform", &State.FakePlatform, PLATFORMS, 225.0F, ImVec4(1.f, 1.f, 1.f, 0.f), 0, " ", PLATFORM_NAMES_COLOR, IM_ARRAYSIZE(PLATFORM_NAMES_COLOR)))
 					State.Save();
-				ImGui::SameLine(0.0f, 0.0f);
-				ImGui::Text("Platform");
 			}
 
 			if (State.FakePlatform == 9) {
@@ -592,7 +589,7 @@ namespace SettingsTab {
 			}
 			if (State.ChatFont) {
 				ImGui::SameLine();
-				if (CustomListBoxInt(" ", &State.ChatFontType, FONTS, 160.f * State.dpiScale)) {
+				if (CustomListBoxInt("", &State.ChatFontType, FONTS, 160.f * State.dpiScale)) {
 					State.Save();
 				}
 			}
@@ -671,6 +668,25 @@ namespace SettingsTab {
 					if (State.AnimationSpeed <= 0) State.AnimationSpeed = 1.f;
 				}
 				SteppedSliderFloat("Rounding Radius Multiplier", &State.RoundingRadiusMultiplier, 0.f, 2.f, 0.01f, "%.2f", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
+
+				ImGui::Text("Toast Notification Alignment:");
+				ImGui::SameLine();
+				static int toastsOnTopSelector = (int)State.ToastsOnTop;
+				if (CustomListBoxInt(" ", &toastsOnTopSelector, { "Bottom", "Top" }, 50.f * State.dpiScale)) {
+					State.ToastsOnTop = (bool)toastsOnTopSelector;
+					State.Save();
+				}
+				ImGui::SameLine();
+				if (CustomListBoxInt("  ", &toastsOnTopSelector, { "Left", "Center", "Right" }, 50.f * State.dpiScale)) {
+					State.Save();
+				}
+
+				ImGui::SetNextItemWidth(60.f * State.dpiScale);
+				if (ImGui::InputInt("Max Toasts to Show at Once", &State.MaxToasts)) {
+					State.MaxToasts = std::clamp(State.MaxToasts, 1, 6);
+				}
+
+				SteppedSliderFloat("Time to Show Toasts For", &State.ToastMaxDuration, 0.5f, 10.0f, 0.5f, "%.1f s", ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_NoInput);
 			}
 
 			if (ImGui::CollapsingHeader("Role Colors")) {
@@ -700,6 +716,8 @@ namespace SettingsTab {
 				
 				ImGui::ColorEdit4("Guardian Angel", (float*)&State.GuardianAngelColor, ImGuiColorEditFlags__OptionsDefault | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 				ImGui::SameLine(150.f * State.dpiScale);
+				ImGui::ColorEdit4("Influencer", (float*)&State.InfluencerColor, ImGuiColorEditFlags__OptionsDefault | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
+				ImGui::SameLine(300.f * State.dpiScale);
 				ImGui::ColorEdit4("Crewmate Ghost", (float*)&State.CrewmateGhostColor, ImGuiColorEditFlags__OptionsDefault | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreview);
 
 				if (AnimatedButton("Reset Role Colors")) {
@@ -717,6 +735,7 @@ namespace SettingsTab {
 					State.DetectiveColor = ImVec4(0.718f, 0.678f, 0.980f, 1.f);
 					State.ViperColor = ImVec4(1.0f, 0.937f, 0.455f, 1.f);
 					State.JudgeColor = ImVec4(0.0f, 0.588f, 0.204f, 1.f);
+					State.InfluencerColor = ImVec4(0.486f, 0.f, 0.596f, 1.f);
 					State.Save();
 				}
 			}
@@ -879,6 +898,7 @@ namespace SettingsTab {
 			ImGui::SameLine(100 * State.dpiScale);
 			ImGui::Text("Cancel Start Game");
 		}
+		ImGui::EndChild();
 		ImGui::EndChild();
 	}
 }

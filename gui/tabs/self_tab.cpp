@@ -4,6 +4,7 @@
 #include "gui-helpers.hpp"
 #include "utility.h"
 #include "state.hpp"
+#include "toasts.hpp"
 #include "logger.h"
 #include "_hooks.h"
 
@@ -15,6 +16,7 @@ namespace SelfTab {
         Utils,
         Roles,
         Randomizers,
+        AntiExploit,
         TextEditor
     };
 
@@ -22,6 +24,7 @@ namespace SelfTab {
     static bool openUtils = false;
     static bool openRoles = false;
     static bool openRandomizers = false;
+    static bool openAntiExploit = false;
     static bool openTextEditor = false;
 
     static std::string originalText = "";
@@ -55,6 +58,7 @@ namespace SelfTab {
         openUtils = group == Groups::Utils;
         openRoles = group == Groups::Roles;
         openRandomizers = group == Groups::Randomizers;
+        openAntiExploit = group == Groups::AntiExploit;
         openTextEditor = group == Groups::TextEditor;
     }
 
@@ -63,6 +67,7 @@ namespace SelfTab {
         else if (name == "Utils") CloseOtherGroups(Groups::Utils);
         else if (name == "Roles") CloseOtherGroups(Groups::Roles);
         else if (name == "Randomizers") CloseOtherGroups(Groups::Randomizers);
+        else if (name == "Anti-Exploit") CloseOtherGroups(Groups::AntiExploit);
         else if (name == "Text Editor") CloseOtherGroups(Groups::TextEditor);
     }
 
@@ -243,7 +248,7 @@ namespace SelfTab {
 
     void Render() {
         ImGui::SameLine(100 * State.dpiScale);
-        ImGui::BeginChild("###Self", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
+        ImGui::BeginChild("###SelfButtons", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
         if (TabGroup("Visuals", openVisuals)) {
             CloseOtherGroups(Groups::Visuals);
         }
@@ -260,10 +265,15 @@ namespace SelfTab {
             CloseOtherGroups(Groups::Randomizers);
         }
         ImGui::SameLine();
+        if (TabGroup("Anti-Exploit", openAntiExploit)) {
+            CloseOtherGroups(Groups::AntiExploit);
+        }
+        ImGui::SameLine();
         if (TabGroup("Text Editor", openTextEditor)) {
             CloseOtherGroups(Groups::TextEditor);
         }
 
+        ImGui::BeginChild("###Self", ImVec2(500 * State.dpiScale, 0), true, ImGuiWindowFlags_NoBackground);
         if (openVisuals) {
             ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
             if (ToggleButton("Max Vision", &State.MaxVision)) {
@@ -339,6 +349,10 @@ namespace SelfTab {
 
             if (framesPassed == 0) State.RefreshChatButton = false;
             else framesPassed--;*/
+
+            if (ToggleButton("Move Match Info Guide HUD Button", &State.MoveMatchInfoGuide)) {
+                State.Save();
+            }
 
             if (/*!IsHost() && */State.SafeMode) {
                 ImGui::Text("Custom names are purely CLIENT-SIDED!");
@@ -653,7 +667,16 @@ namespace SelfTab {
             if (ToggleButton("Disable Shush Animation", &State.DisableShushAnimation)) {
                 State.Save();
             }
+
+            if (ToggleButton("Control Pet", &State.ControlPet)) {
+                if (*Game::pLocalPlayer == nullptr || (!IsInGame() && !IsInLobby())) State.ControlPet = false;
+                if (!State.ControlPet) State.DisableControlPetHand = true;
+            }
             ImGui::SameLine();
+            /*if (ToggleButton("Show Hand While Controlling Pet", &State.ShowPetHand)) {
+                State.Save();
+            }*/
+
             if (ToggleButton("Autokill", &State.AutoKill)) {
                 State.Save();
             }
@@ -756,17 +779,17 @@ namespace SelfTab {
                 {"Detective",		State.DetectiveColor},
                 {"Viper",			State.ViperColor},
                 {"Judge",           State.JudgeColor},
+                {"Influencer",      State.InfluencerColor},
             }; // needs to be updated every render
 
             if (CustomListBoxIntColored("Select Role", &State.FakeRole, FAKEROLES, 100.0f * State.dpiScale, ImVec4(1.f, 1.f, 1.f, 0.f), 0, " ", FAKEROLE_NAMES_COLOR, IM_ARRAYSIZE(FAKEROLE_NAMES_COLOR))) {
-                // for some reason, detective is 12 (0x0c) instead of 11, and viper is 18 (0x12) instead of 12
-                if (State.FakeRole >= 12) State.FakeRoleId = State.FakeRole + 6;
+                // for some reason, detective is 12 (0x0c) instead of 11, viper is 18 (0x12) instead of 12, and influencer (SpiritGuide) is 21 (0x15) instead of 20
+                if (State.FakeRole >= 14) State.FakeRoleId = State.FakeRole + 7;
+                else if (State.FakeRole >= 12) State.FakeRoleId = State.FakeRole + 6;
                 else if (State.FakeRole == 11) State.FakeRoleId = State.FakeRole + 1;
                 else State.FakeRoleId = State.FakeRole;
                 State.Save();
             }
-            ImGui::SameLine(0.0f, 0.0f);
-            ImGui::Text("Select Role");
             ImGui::SameLine();
             if ((IsHost() || !State.SafeMode) && (IsInGame() || IsInLobby()) && AnimatedButton("Set Role")) {
                 // State.FakeRole = std::clamp(State.FakeRole, 0, 10);
@@ -792,30 +815,42 @@ namespace SelfTab {
             case (int)RoleTypes__Enum::Crewmate:
             case (int)RoleTypes__Enum::Engineer:
             case (int)RoleTypes__Enum::Scientist:
-            case (int)RoleTypes__Enum::Noisemaker:
             case (int)RoleTypes__Enum::Tracker:
             case (int)RoleTypes__Enum::Detective:
             case (int)RoleTypes__Enum::CrewmateGhost:
             case (int)RoleTypes__Enum::ImpostorGhost:
+                roleAllowed = true;
+                break;
+            case (int)RoleTypes__Enum::Noisemaker:
+                if (State.RealRole != RoleTypes__Enum::Noisemaker) {
+                    roleAllowed = false;
+                    break;
+                }
+                roleAllowed = true;
+                break;
             case (int)RoleTypes__Enum::GuardianAngel:
+                if (!IsHost() && State.SafeMode && State.RealRole != RoleTypes__Enum::GuardianAngel) {
+                    roleAllowed = false;
+                    break;
+                }
                 roleAllowed = true;
                 break;
             case (int)RoleTypes__Enum::Judge:
-                if (State.SafeMode || State.RealRole != RoleTypes__Enum::Judge) {
+                if (State.SafeMode && State.RealRole != RoleTypes__Enum::Judge) {
                     roleAllowed = false;
                     break;
                 }
                 roleAllowed = true;
                 break;
             case (int)RoleTypes__Enum::Impostor:
-                if ((!IsHost() && State.SafeMode) || State.RealRole != RoleTypes__Enum::Impostor || State.RealRole != RoleTypes__Enum::Shapeshifter || State.RealRole != RoleTypes__Enum::Phantom || State.RealRole != RoleTypes__Enum::Viper) {
+                if (!IsHost() && State.SafeMode && State.RealRole != RoleTypes__Enum::Impostor && State.RealRole != RoleTypes__Enum::Shapeshifter && State.RealRole != RoleTypes__Enum::Phantom && State.RealRole != RoleTypes__Enum::Viper) {
                     roleAllowed = false;
                     break;
                 }
                 roleAllowed = true;
                 break;
             case (int)RoleTypes__Enum::Shapeshifter:
-                if (State.SafeMode || State.RealRole != RoleTypes__Enum::Shapeshifter) {
+                if (State.SafeMode && State.RealRole != RoleTypes__Enum::Shapeshifter) {
                     roleAllowed = false;
                     break;
                 }
@@ -830,6 +865,13 @@ namespace SelfTab {
                 break;
             case (int)RoleTypes__Enum::Viper:
                 if (State.RealRole != RoleTypes__Enum::Viper) {
+                    roleAllowed = false;
+                    break;
+                }
+                roleAllowed = true;
+                break;
+            case (int)RoleTypes__Enum::SpiritGuide:
+                if (State.RealRole != RoleTypes__Enum::SpiritGuide) {
                     roleAllowed = false;
                     break;
                 }
@@ -1034,6 +1076,7 @@ namespace SelfTab {
                 ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
                 if ((IsInGame() || IsInLobby()) && AnimatedButton("Confuse Now")) {
                     ControlAppearance(true);
+                    Toasts::AddToast("Confuser", "Randomized your outfit!", ImVec4(0.f, 1.f, 1.f, 1.f));
                 }
                 if (IsInGame() || IsInLobby()) {
                     if (IsHost() || !State.SafeMode)
@@ -1136,7 +1179,7 @@ namespace SelfTab {
                 if (!State.CosmeticPresets.empty()) {
                     std::vector<const char*> names;
                     for (auto& p : State.CosmeticPresets) names.push_back(p.Name.c_str());
-                    CustomListBoxInt("##cosmeticpresetselect", &State.SelectedCosmeticPreset, names, 200.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0, "Preset");
+                    CustomListBoxInt("Preset", &State.SelectedCosmeticPreset, names, 200.0f * State.dpiScale, ImVec4(0, 0, 0, 0), 0);
                     ImGui::SameLine();
                     if (AnimatedButton("Apply##cosmeticpreset")) {
                         ApplyCosmeticPreset(State.CosmeticPresets[std::clamp(State.SelectedCosmeticPreset, 0, (int)State.CosmeticPresets.size() - 1)]);
@@ -1195,6 +1238,20 @@ namespace SelfTab {
                 }
             }
         }
+
+        if (openAntiExploit) {
+            if (ToggleButton("No Disconnect Penalties", &State.AntiExploit_DisconnectPenalties)) State.Save();
+            if (ToggleButton("Resist Targeted Sabotages (Non-Host)", &State.AntiExploit_UnauthorizedSabotages)) State.Save();
+            if (ToggleButton("Resist Unauthorized Teleports", &State.AntiExploit_UnauthorizedTeleports)) State.Save();
+            if (ToggleButton("Resist Unauthorized Ziplines", &State.AntiExploit_UnauthorizedZiplines)) State.Save();
+            if (ToggleButton("Resist Attempt to Ban", &State.AntiExploit_AttemptToBan)) State.Save();
+
+            ImGui::NewLine();
+            ImGui::Text("Anti-Exploits for Hosts");
+            if (ToggleButton("Resist Votekicks Against Self", &State.AntiExploit_VotekicksAgainstSelfHost)) State.Save();
+            if (ToggleButton("Prevent Attempt to Crash Lobby", &State.AntiExploit_CrashLobbyHost)) State.Save();
+        }
+
         if (openTextEditor) {
             InputString("Input", &originalText);
             editedText = GetTextEditorName(originalText);
@@ -1272,6 +1329,7 @@ namespace SelfTab {
             ImGui::SameLine();
             ImGui::InputFloat("Rotation Angle", &rotateAngle);
         }
+        ImGui::EndChild();
         ImGui::EndChild();
     }
 }

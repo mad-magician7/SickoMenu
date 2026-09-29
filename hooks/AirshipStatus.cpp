@@ -1,6 +1,7 @@
 #include "pch-il2cpp.h"
 #include "_hooks.h"
 #include "state.hpp"
+#include "toasts.hpp"
 #include "logger.h"
 #include "utility.h"
 
@@ -13,13 +14,14 @@ void dAirshipStatus_OnEnable(AirshipStatus* __this, MethodInfo* method)
 		State.SpeedrunTimer += Time_get_deltaTime(NULL);
 	try {
 		State.BlinkPlayersTab = false;
+		State.SpamZiplineEveryone = false;
 
 		Replay::Reset();
 
 		State.MatchStart = std::chrono::system_clock::now();
 		State.MatchCurrent = State.MatchStart;
 
-		State.selectedDoor = SystemTypes__Enum::Hallway;
+		State.selectedDoors.clear();
 		State.mapDoors.clear();
 		State.pinnedDoors.clear();
 
@@ -31,9 +33,6 @@ void dAirshipStatus_OnEnable(AirshipStatus* __this, MethodInfo* method)
 		}
 
 		std::sort(State.mapDoors.begin(), State.mapDoors.end());
-
-		if (!State.PanicMode && State.confuser && State.confuseOnStart)
-			ControlAppearance(true);
 
 		if (State.AutoFakeRole) {
 			if (!State.SafeMode) State.rpcQueue.push(new RpcSetRole(*Game::pLocalPlayer, (RoleTypes__Enum)State.FakeRole));

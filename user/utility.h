@@ -72,6 +72,8 @@ public:
 	int JudgeChance = 0;
 	int GuardianAngelCount = 0;
 	int GuardianAngelChance = 0;
+	int SpiritGuideCount = 0;
+	int SpiritGuideChance = 0;
 	int MaxCrewmates = Game::MAX_PLAYERS;
 	RoleRates(const class GameOptions& gameOptions, int playerAmount);
 	int GetRoleCount(RoleTypes__Enum role);
@@ -297,6 +299,7 @@ std::string GetCustomName(std::string name, bool forceUnique = false, uint8_t id
 std::vector<std::string> GetAllConfigs();
 bool CheckConfigExists(std::string configName);
 void UpdatePoints(NetworkedPlayerInfo* playerData, float points);
+std::string GetColorName(int32_t colorId);
 void SMAC_OnCheatDetected(PlayerControl* pCtrl, std::string reason);
 std::string strToLower(std::string str);
 bool IsRandomAUName(const std::string& name);
