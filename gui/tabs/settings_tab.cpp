@@ -677,7 +677,7 @@ namespace SettingsTab {
 					State.Save();
 				}
 				ImGui::SameLine();
-				if (CustomListBoxInt("  ", &toastsOnTopSelector, { "Left", "Center", "Right" }, 50.f * State.dpiScale)) {
+				if (CustomListBoxInt("  ", &State.ToastPositionX, { "Left", "Center", "Right" }, 50.f * State.dpiScale)) {
 					State.Save();
 				}
 
@@ -735,7 +735,7 @@ namespace SettingsTab {
 					State.DetectiveColor = ImVec4(0.718f, 0.678f, 0.980f, 1.f);
 					State.ViperColor = ImVec4(1.0f, 0.937f, 0.455f, 1.f);
 					State.JudgeColor = ImVec4(0.0f, 0.588f, 0.204f, 1.f);
-					State.InfluencerColor = ImVec4(0.486f, 0.f, 0.596f, 1.f);
+					State.InfluencerColor = ImVec4(0.486f, 0.f, 0.596f, 0.5f);
 					State.Save();
 				}
 			}
@@ -850,11 +850,11 @@ namespace SettingsTab {
 			ImGui::SameLine(100 * State.dpiScale);
 			ImGui::Text("NoClip");
 
-			ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
+			/*ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
 
 			CheckKeybindEdit(HotKey(State.KeyBinds.Toggle_Autokill));
 			ImGui::SameLine(100 * State.dpiScale);
-			ImGui::Text("Autokill");
+			ImGui::Text("Autokill");*/
 
 			ImGui::Dummy(ImVec2(4, 4) * State.dpiScale);
 

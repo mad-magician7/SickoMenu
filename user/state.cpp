@@ -16,7 +16,7 @@ static std::string CleanChatPresetName(std::string cpName) {
 }
 
 void Settings::Load() {
-    this->SickoVersion = "v5.1_pr2";
+    this->SickoVersion = "v5.1";
 
     auto path = getModulePath(NULL);
     auto configPath = path.parent_path() / "SickoMenu" / "sicko-selected-config.json";
@@ -222,6 +222,7 @@ void Settings::Load() {
                 if (p.contains("ViperDissolveTime")) preset.ViperDissolveTime = p["ViperDissolveTime"].get<float>();
                 if (p.contains("DetectiveSuspectLimit")) preset.DetectiveSuspectLimit = p["DetectiveSuspectLimit"].get<float>();
                 if (p.contains("JudgeTaskRequirement")) preset.JudgeTaskRequirement = p["JudgeTaskRequirement"].get<float>();
+                if (p.contains("InfluencerMessageCooldown")) preset.JudgeTaskRequirement = p["InfluencerMessageCooldown"].get<float>();
                 if (p.contains("RoleRates") && p["RoleRates"].is_array()) {
                     for (auto& r : p["RoleRates"]) {
                         if (r.contains("Role") && r.contains("Count") && r.contains("Chance")) {
@@ -367,7 +368,7 @@ void Settings::Load() {
         JSON_TRYGET("KillInVanish", this->KillInVanish);
         JSON_TRYGET("BypassAngelProt", this->BypassAngelProt);
         JSON_TRYGET("InfiniteKillRange", this->InfiniteKillRange);
-        JSON_TRYGET("AutoKill", this->AutoKill);
+        // JSON_TRYGET("AutoKill", this->AutoKill);
         JSON_TRYGET("FakeAlive", this->FakeAlive);
         JSON_TRYGET("ShowHost", this->ShowHost);
         JSON_TRYGET("HideWatermark", this->HideWatermark);
@@ -449,6 +450,7 @@ void Settings::Load() {
         JSON_TRYGET("Judge_NoTaskRequirement", this->Judge_NoTaskRequirement);
         JSON_TRYGET("Judge_InfiniteOverrules", this->Judge_InfiniteOverrules);
         JSON_TRYGET("GuardianAngel_NoProtectCooldown", this->GuardianAngel_NoProtectCooldown);
+        JSON_TRYGET("Influencer_NoRefreshCooldown", this->Influencer_NoRefreshCooldown);
         JSON_TRYGET("Impostor_NoKillCooldown", this->Impostor_NoKillCooldown);
         JSON_TRYGET("Shapeshifter_InfiniteShapeshiftDuration", this->Shapeshifter_InfiniteShapeshiftDuration);
 
@@ -972,6 +974,7 @@ void Settings::Save() {
                             { "ViperDissolveTime", p.ViperDissolveTime },
                             { "DetectiveSuspectLimit", p.DetectiveSuspectLimit },
                             { "JudgeTaskRequirement", p.JudgeTaskRequirement },
+                            { "InfluencerMessageCooldown", p.InfluencerMessageCooldown },
                             { "RoleRates", [&]() {
                                 nlohmann::json rarr = nlohmann::json::array();
                                 for (auto& [role, rp] : p.RoleRates) {
@@ -1082,7 +1085,7 @@ void Settings::Save() {
                 { "KillInVanish", this->KillInVanish },
                 { "BypassAngelProt", this->BypassAngelProt },
                 { "InfiniteKillRange", this->InfiniteKillRange },
-                { "AutoKill", this->AutoKill },
+                // { "AutoKill", this->AutoKill },
                 { "FakeAlive", this->FakeAlive },
                 { "HideWatermark", this->HideWatermark },
                 { "HideModStamp", this->HideModStamp },
@@ -1162,6 +1165,7 @@ void Settings::Save() {
                 { "Judge_NoTaskRequirement", this->Judge_NoTaskRequirement },
                 { "Judge_InfiniteOverrules", this->Judge_InfiniteOverrules },
                 { "GuardianAngel_NoProtectCooldown", this->GuardianAngel_NoProtectCooldown },
+                { "Influencer_NoRefreshCooldown", this->Influencer_NoRefreshCooldown },
                 { "Impostor_NoKillCooldown", this->Impostor_NoKillCooldown },
                 { "Shapeshifter_InfiniteShapeshiftDuration", this->Shapeshifter_InfiniteShapeshiftDuration },
 
