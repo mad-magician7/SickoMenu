@@ -16,7 +16,7 @@ static std::string CleanChatPresetName(std::string cpName) {
 }
 
 void Settings::Load() {
-    this->SickoVersion = "v5.1";
+    this->SickoVersion = "v5.1.1";
 
     auto path = getModulePath(NULL);
     auto configPath = path.parent_path() / "SickoMenu" / "sicko-selected-config.json";
@@ -85,7 +85,6 @@ void Settings::Load() {
         JSON_TRYGET("MenuGradientColor2_A", this->MenuGradientColor2.w);
         JSON_TRYGET("UnlockCosmetics", this->UnlockCosmetics);
         JSON_TRYGET("GameFPS", this->GameFPS);
-        JSON_TRYGET("ShowKeybinds", this->ShowKeybinds);
         JSON_TRYGET("KeybindsWhileChatting", this->KeybindsWhileChatting);
         JSON_TRYGET("SpoofLevel", this->SpoofLevel);
         JSON_TRYGET("FakeLevel", this->FakeLevel);
@@ -222,7 +221,7 @@ void Settings::Load() {
                 if (p.contains("ViperDissolveTime")) preset.ViperDissolveTime = p["ViperDissolveTime"].get<float>();
                 if (p.contains("DetectiveSuspectLimit")) preset.DetectiveSuspectLimit = p["DetectiveSuspectLimit"].get<float>();
                 if (p.contains("JudgeTaskRequirement")) preset.JudgeTaskRequirement = p["JudgeTaskRequirement"].get<float>();
-                if (p.contains("InfluencerMessageCooldown")) preset.JudgeTaskRequirement = p["InfluencerMessageCooldown"].get<float>();
+                if (p.contains("InfluencerMessageCooldown")) preset.InfluencerMessageCooldown = p["InfluencerMessageCooldown"].get<float>();
                 if (p.contains("RoleRates") && p["RoleRates"].is_array()) {
                     for (auto& r : p["RoleRates"]) {
                         if (r.contains("Role") && r.contains("Count") && r.contains("Chance")) {
@@ -802,7 +801,6 @@ void Settings::Save() {
                 { "MenuGradientColor2_A", this->MenuGradientColor2.w },
                 { "UnlockCosmetics", this->UnlockCosmetics },
                 { "GameFPS", this->GameFPS },
-                { "ShowKeybinds", this->ShowKeybinds },
                 { "KeybindsWhileChatting", this->KeybindsWhileChatting },
                 { "SpoofLevel", this->SpoofLevel },
                 { "FakeLevel", this->FakeLevel },

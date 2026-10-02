@@ -59,7 +59,6 @@ public:
     int GameFPS = 60;
     bool SpoofLevel = false;
     int FakeLevel = 1;
-    bool ShowKeybinds = true;
     bool KeybindsWhileChatting = true;
     bool SpoofFriendCode = false;
     bool UseNewFriendCode = false;
@@ -739,6 +738,7 @@ public:
     };
 
     bool CanChangeOutfit = false;
+    bool HasSpawnedIn = false;
     float OverflowTimer = 0.f;
     std::string OverflowCachedNamePlate = "";
     bool MainMenuLoaded = false;
